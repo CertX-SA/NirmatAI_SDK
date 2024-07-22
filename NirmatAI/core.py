@@ -32,3 +32,4 @@ class NirmatAI:
         Generate a report based on the processed data.
         """
         pass
+    

@@ -18,3 +18,4 @@ class Scorer:
             data (str): The data to be scored.
         """
         pass
+    
