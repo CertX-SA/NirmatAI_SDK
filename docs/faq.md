@@ -1,58 +1,26 @@
-# Frequently Asked Questions (FAQ)
+# Documentation
 
-This document provides answers to some of the most frequently asked questions about the NirmatAI SDK.
+This directory contains the documentation for the NirmatAI SDK. Here, you will find various guides, API references, and other important information to help you understand and use the SDK effectively.
 
-## General Questions
+## Contents
 
-### What is the NirmatAI SDK?
+1. User Guide: Comprehensive guide to help users get started with the SDK.
+2. API Reference: Detailed documentation of all the classes, functions, and methods available in the SDK.
+3. Examples: Additional examples and use cases demonstrating how to use the SDK in different scenarios.
+4. FAQ: Frequently asked questions and troubleshooting tips.
 
-The NirmatAI SDK is a software development kit that provides tools and utilities to help you integrate with NirmatAI services.
+## File Structure
 
-### How do I install the SDK?
+- user_guide.md: A step-by-step guide for getting started with the NirmatAI SDK.
+- api_reference.md: Detailed API documentation.
+- examples.md: Additional examples and use cases.
+- faq.md: Frequently asked questions and troubleshooting tips.
 
-You can install the SDK using pip:
+## Usage
 
+- Start with the user_guide.md to understand how to install and use the SDK.
+- Refer to the api_reference.md for detailed information on specific functions and classes.
+- Check the examples.md for practical examples of using the SDK.
+- If you encounter any issues, consult the faq.md for common problems and solutions.
 
-pip install NirmatAI
-
-
-## Usage Questions
-
-### How do I use the greet function?
-
-The greet function generates a greeting message. Here's an example:
-
-
-from NirmatAI import greet
-
-message = greet("Alice")
-print(message)  # Output: Hello, Alice!
-
-
-### How do I use the add function?
-
-The add function adds two integers. Here's an example:
-
-
-from NirmatAI import add
-
-sum_result = add(10, 20)
-print(sum_result)  # Output: 30
-
-
-## Troubleshooting
-
-### I encountered an error while using the SDK. What should I do?
-
-If you encounter any issues, please check the following:
-- Ensure you have installed all required dependencies.
-- Refer to the [user guide](user_guide.md) and [API reference](api_reference.md) for correct usage.
-- Check the [examples](../examples/README.md) for practical usage scenarios.
-
-If the problem persists, please open an issue on our [GitHub repository](https://github.com/CertX-SA/NirmatAI_SDK) with detailed information about the error.
-
-### How can I contribute to the SDK?
-
-We welcome contributions! Please refer to the CONTRIBUTING.md file in the root of the repository for guidelines on how to contribute.
-
-For any additional questions, feel free to reach out to us through our [GitHub repository](https://github.com/CertX-SA/NirmatAI_SDK).
+For any additional information or support, please refer to the main [README.md](../README.md) in the root of the repository.
