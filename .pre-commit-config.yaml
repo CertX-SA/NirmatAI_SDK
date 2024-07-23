@@ -1,31 +1,52 @@
 default_install_hook_types:
-  # Mandatory to install both pre-commit and pre-push hooks (see https://pre-commit.com/#top_level-default_install_hook_types)
+  # This section specifies the types of hooks to be installed by default.
+  # We are specifying both pre-commit and pre-push hooks to ensure they are installed and run appropriately.
   - pre-commit
   - pre-push
+
 repos:
+  # This repository contains a collection of useful pre-commit hooks created by the pre-commit team.
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    # The revision of the repository to use. It is generally a good idea to use a specific version to ensure stability.
+    rev: v4.6.0
     hooks:
+      # This hook trims trailing whitespace from files.
       - id: trailing-whitespace
+      # This hook ensures that files end with a newline.
       - id: end-of-file-fixer
+      # This hook checks that YAML files are valid.
       - id: check-yaml
+      # This hook prevents adding large files to the repository.
       - id: check-added-large-files
+      # This hook checks for unresolved merge conflicts in files.
       - id: check-merge-conflict
 
+  # This repository contains a tool called pyupgrade, which automatically upgrades Python syntax to newer versions.
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.16.0
+    hooks:
+      # This hook runs pyupgrade to automatically upgrade Python syntax to be compatible with Python 3.6+.
+      - id: pyupgrade
+        args: [--py36-plus]
+
+  # Local repository hooks. These are custom hooks specific to this repository.
   - repo: local
     hooks:
+      # This hook formats code using the ruff tool.
       - id: ruff
         name: Formatting (ruff)
         entry: make format-code
         language: system
         types: [python]
         stages: [commit]
+      # This hook checks code formatting using the ruff tool.
       - id: ruff-check
         name: Linter (ruff)
         entry: make check-format-code
         language: system
         types: [python]
         stages: [commit]
+      # This hook runs type checking using mypy.
       - id: mypy
         name: Type checking (mypy)
         entry: make type-check
@@ -33,12 +54,14 @@ repos:
         language: system
         types: [python]
         stages: [commit]
+      # This hook runs unit tests using pytest.
       - id: unit-tests
         name: Unit tests (pytest)
         entry: make test
         language: system
         types: [python]
         stages: [commit]
+      # This hook builds documentation.
       - id: docs
         name: Build docs
         entry: make build-docs
