@@ -45,4 +45,3 @@ repos:
         language: system
         types: [python]
         stages: [commit]
-        

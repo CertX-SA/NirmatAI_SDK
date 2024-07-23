@@ -7,7 +7,7 @@ NirmatAI SDK - A Comprehensive SDK for NirmatAI RAG System
 NirmatAI SDK is a Python package that provides a robust SDK for integrating with the
 NirmatAI Retrieval-Augmented Generation (RAG) system for effective requirements auditing.
 
-The RAG system leverages PrivateGPT for its core processing, Ollama for advanced language 
+The RAG system leverages PrivateGPT for its core processing, Ollama for advanced language
 model serving, and Qdrant for efficient embeddings storage and retrieval.
 
 Key Features
