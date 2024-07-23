@@ -513,3 +513,4 @@ class NirmatAI:
         except Exception as error:
             print(f"An error occurred while retrieving the documents: {error}")
             raise
+        
