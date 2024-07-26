@@ -1,0 +1,45 @@
+- name: Deploy Nirmata
+  hosts: localhost
+  tasks:
+    - name: Create pod
+      containers.podman.podman_pod:
+        name: prod
+        state: started
+        recreate: true
+        ports:
+          - 8001:8080
+
+    - name: Create ollama container with GPU
+      containers.podman.podman_container:
+        name: ollama
+        image: docker.io/ollama/ollama:latest
+        state: started
+        pod: prod
+        volume:
+          - ./private-gpt/models:/root/.ollama
+        device:
+          - "nvidia.com/gpu=0"
+
+    - name: Create qdrant container
+      containers.podman.podman_container:
+        name: qdrant
+        image: docker.io/qdrant/qdrant:v1.7.4
+        state: started
+        pod: prod
+
+    - name: Create privategpt container
+      containers.podman.podman_container:
+        name: privategpt
+        image: marcorepettocertx/privategpt:0.5.3
+        state: started
+        pod: prod
+        env:
+          PGPT_PROFILES: "docker"
+          PGPT_MODE: "ollama"
+          PGPT_VECTORSTORE: "qdrant"
+          PGPT_QDRANT_URL: "http://qdrant:6333"
+          PGPT_OLLAMA_API_BASE: "http://ollama:11434"
+          PGPT_OLLAMA_EMBEDDING_API_BASE: "http://ollama:11434"
+          PGPT_OLLAMA_LLM_MODEL: "llama3:70b"
+          PGPT_OLLAMA_EMBEDDING_MODEL: "nomic-embed-text"
+          PGPT_RAG_SIMILARITY_TOP_K: "2"
