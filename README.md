@@ -1,1 +1,0 @@
-# NirmatAI Software Development Kit
