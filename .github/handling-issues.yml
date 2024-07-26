@@ -1,0 +1,22 @@
+name: Label issues  # Name of the GitHub Actions workflow
+
+on:
+  issues:
+    types:
+      - reopened  # Trigger workflow when an issue is reopened
+      - opened  # Trigger workflow when a new issue is opened
+
+jobs:
+  label_issues:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu environment for the job
+    permissions:
+      issues: write  # Grant write permissions to issues
+    steps:
+      - name: Label issue  # Name of the step
+        run: gh issue edit ${{ github.event.issue.number }} --add-label "triage"
+        # Command to add the "triage" label to the issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GitHub token for authentication, automatically provided by GitHub Actions
+          GH_REPO: ${{ github.repository }}
+          # The repository on which the workflow is running
