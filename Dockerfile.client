@@ -1,0 +1,16 @@
+FROM python:3.12-bullseye
+
+# Set python alias
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the pyproject.toml file to the working directory
+COPY pyproject.toml .
+
+# Install the dependencies
+RUN pip install .
+
+# Keep the container running
+CMD tail -f /dev/null
