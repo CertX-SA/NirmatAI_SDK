@@ -1,0 +1,52 @@
+default_install_hook_types:
+  # Mandatory to install both pre-commit and pre-push hooks (see https://pre-commit.com/#top_level-default_install_hook_types)
+  - pre-commit
+  - pre-push
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      # This hook trims trailing whitespace from files.
+      - id: trailing-whitespace
+      # This hook ensures that files end with a newline.
+      - id: end-of-file-fixer
+      # This hook checks that YAML files are valid.
+      - id: check-yaml
+      # This hook prevents adding large files to the repository.
+      - id: check-added-large-files
+      # This hook checks for unresolved merge conflicts in files.
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: ruff
+        name: Formatting (ruff)
+        entry: make format-code
+        language: system
+        types: [python]
+        stages: [commit]
+      - id: ruff-check
+        name: Linter (ruff)
+        entry: make check-format-code
+        language: system
+        types: [python]
+        stages: [commit]
+      - id: mypy
+        name: Type checking (mypy)
+        entry: make type-check
+        pass_filenames: false
+        language: system
+        types: [python]
+        stages: [commit]
+      - id: unit-tests
+        name: Unit tests (pytest)
+        entry: make test
+        language: system
+        types: [python]
+        stages: [commit]
+      - id: docs
+        name: Build docs
+        entry: make build-docs
+        language: system
+        types: [python]
+        stages: [commit]
