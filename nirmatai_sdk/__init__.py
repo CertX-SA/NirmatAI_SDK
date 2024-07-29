@@ -20,5 +20,7 @@ Here are just a few of the things that NirmatAI does well:
     - **Reporting**: Generate reports and save results in various formats.
 """
 
-from .core import NirmatAI  # noqa: F401, TID252
-from .telemetry import Scorer  # noqa: F401, TID252
+from nirmatai_sdk.core import NirmatAI
+from nirmatai_sdk.telemetry import Scorer
+
+__all__ = ['NirmatAI', 'Scorer']
