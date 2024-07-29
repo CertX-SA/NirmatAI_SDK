@@ -801,7 +801,8 @@ def test_transform_to_numerical_large_set():
     y_true = np.array(labels)
     y_pred = np.array(labels)
 
-    scorer = Scorer(y_true, y_pred)
-    transformed = scorer._transform_to_numerical(y_true)
-    
-    assert np.array_equal(transformed, np.arange(1000))
+    with pytest.raises(
+        ValueError,
+        match="y_true contains invalid labels"
+    ):
+        Scorer(y_true, y_pred)
