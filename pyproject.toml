@@ -3,8 +3,7 @@ name = "nirmatai_sdk"
 version = "0.1.0"
 description = "NirmatAI Software Development Kit"
 authors = [{ name = "Ilker Gul", email = "ilker.gul@certx.com" }]
-readme = "README.md"
-readme-content-type = "text/markdown"  # Specify the format of the README
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12"
 dependencies = [
     "pgpt-python @ git+https://github.com/mrepetto-certx/pgpt-python.git@main",
@@ -25,7 +24,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: SDK",
 ]
-url = "https://github.com/CertX-SA/NirmatAI_SDK"
+urls = { "Homepage" = "https://github.com/CertX-SA/NirmatAI_SDK" }
 license = { text = "MIT" }
 
 [project.optional-dependencies]
