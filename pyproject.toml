@@ -4,16 +4,29 @@ version = "0.1.0"
 description = "NirmatAI Software Development Kit"
 authors = [{ name = "Ilker Gul", email = "ilker.gul@certx.com" }]
 readme = "README.md"
+readme-content-type = "text/markdown"  # Specify the format of the README
 requires-python = ">=3.12"
 dependencies = [
     "pgpt-python @ git+https://github.com/mrepetto-certx/pgpt-python.git@main",
-    "pandas== 2.2.2",
+    "pandas==2.2.2",
     "openpyxl==3.1.4",
     "numpy==1.26.4",
     "seaborn==0.13.2",
     "lxml==5.2.2",
     "scikit-learn==1.5.1",
 ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: SDK",
+]
+url = "https://github.com/CertX-SA/NirmatAI_SDK"
+license = { text = "MIT" }
 
 [project.optional-dependencies]
 dev = [
@@ -25,12 +38,11 @@ dev = [
     "types-pyyaml==6.0.12.12",
     "mlflow==2.13.0",
 ]
-
 docs = ["sphinx==7.3.7", "sphinx-rtd-theme==2.0.0"]
 
 # ruff
 [tool.ruff]
-target-version = 'py312'
+target-version = "py312"
 
 # See all rules at https://beta.ruff.rs/docs/rules/
 lint.select = [
@@ -64,7 +76,6 @@ strict = true
 runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 
 ## mypy
-
 [tool.mypy]
 python_version = "3.12"
 strict = true
