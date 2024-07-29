@@ -1,11 +1,40 @@
 - name: Create pod and run containers
   hosts: localhost
   vars:
+    # The desired state of the containers (started/stopped)
     container_state: started
-    use_gpus: false # Set this to true to use GPUs, false to not use GPUs
-    start_dev_only: false # Set this to true to start only the dev container
+
+    # Set to true to use GPUs, false to not use GPUs
+    use_gpus: false
+
+    # Set to true to start only the development container
+    start_dev_only: false
+
+    # Pod name derived from environment variable
     pod_name: "{{ lookup('env', 'POD_NAME') | regex_replace('/', '_') }}"
+
+    # Image used for the development container
+    dev_image: marcorepettocertx/dev:0.0.5
+
+    # Common volumes to be mounted in the development container
+    common_volumes:
+      - ./nirmatai_sdk:/app/nirmatai_sdk
+      #- ./data:/app/data  # Uncomment if needed
+      - ./experiments:/app/experiments
+      - ./docs:/app/docs
+      - ./htmlcov:/app/htmlcov
+      - ./pyproject.toml:/app/pyproject.toml
+
+    # Common environment variables for the development container
+    common_env:
+      MLFLOW_TRACKING_URI: "http://host.containers.internal:5000"
+      POD_NAME: "{{ pod_name }}"
+      PGPT_OLLAMA_LLM_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_LLM_MODEL') | default('mistral') }}"
+      PGPT_OLLAMA_EMBEDDING_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_EMBEDDING_MODEL') | default('nomic-embed-text') }}"
+      PGPT_RAG_SIMILARITY_TOP_K: "{{ lookup('env', 'PGPT_RAG_SIMILARITY_TOP_K') | default('2') }}"
+  
   tasks:
+    # Create a pod if not starting the dev container only
     - name: Create pod
       containers.podman.podman_pod:
         name: "{{ pod_name }}"
@@ -15,109 +44,28 @@
           - 8000:8080
       when: not start_dev_only | bool
 
-    - name: Create ollama container
-      containers.podman.podman_container:
-        name: "{{ pod_name }}_ollama"
-        image: docker.io/ollama/ollama:latest
-        state: "{{ container_state }}"
-        detach: true
-        pod: "{{ pod_name }}"
-        volume:
-          - ./private-gpt/models:/root/.ollama
-      when: not start_dev_only and not use_gpus | bool
-
-    - name: Create ollama container with GPU
-      containers.podman.podman_container:
-        name: "{{ pod_name }}_ollama"
-        image: docker.io/ollama/ollama:latest
-        state: "{{ container_state }}"
-        detach: true
-        pod: "{{ pod_name }}"
-        volume:
-          - ./private-gpt/models:/root/.ollama
-        device:
-          - "nvidia.com/gpu=all"
-      when: not start_dev_only and use_gpus | bool
-
-    - name: Create qdrant container
-      containers.podman.podman_container:
-        name: "{{ pod_name }}_qdrant"
-        image: docker.io/qdrant/qdrant:v1.7.4
-        state: "{{ container_state }}"
-        detach: true
-        pod: "{{ pod_name }}"
-      when: not start_dev_only | bool
-
-    - name: Create privategpt container
-      containers.podman.podman_container:
-        name: "{{ pod_name }}_privategpt"
-        image: marcorepettocertx/privategpt:0.5.3
-        state: "{{ container_state }}"
-        detach: true
-        pod: "{{ pod_name }}"
-        env:
-          PGPT_PROFILES: "docker"
-          PGPT_MODE: "ollama"
-          PGPT_VECTORSTORE: "qdrant"
-          PGPT_QDRANT_URL: "http://{{ pod_name }}_qdrant:6333"
-          PGPT_OLLAMA_API_BASE: "http://{{ pod_name }}_ollama:11434"
-          PGPT_OLLAMA_EMBEDDING_API_BASE: "http://{{ pod_name }}_ollama:11434"
-          PGPT_OLLAMA_LLM_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_LLM_MODEL') | default('mistral') }}"
-          PGPT_OLLAMA_EMBEDDING_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_EMBEDDING_MODEL') | default('nomic-embed-text') }}"
-          PGPT_RAG_SIMILARITY_TOP_K: "{{ lookup('env', 'PGPT_RAG_SIMILARITY_TOP_K') | default('2') }}"
-      when: not start_dev_only | bool
-
-    - name: Create client container
-      containers.podman.podman_container:
-        name: "{{ pod_name }}_client"
-        image: marcorepettocertx/client:0.0.5
-        state: "{{ container_state }}"
-        detach: true
-        pod: "{{ pod_name }}"
-      when: not start_dev_only | bool
-
+    # Create a development container without GPU
     - name: Create dev container
       containers.podman.podman_container:
         name: "{{ pod_name }}_dev"
-        image: marcorepettocertx/dev:0.0.5
+        image: "{{ dev_image }}"
         state: "{{ container_state }}"
         detach: true
         pod: "{{ pod_name if not start_dev_only else None }}"
-        volume:
-          - ./nirmatai_sdk:/app/nirmatai_sdk
-          #- ./data:/app/data
-          - ./experiments:/app/experiments
-          - ./docs:/app/docs
-          - ./htmlcov:/app/htmlcov
-          - ./pyproject.toml:/app/pyproject.toml
-        env:
-          MLFLOW_TRACKING_URI: "http://host.containers.internal:5000"
-          POD_NAME: "{{ pod_name }}"
-          PGPT_OLLAMA_LLM_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_LLM_MODEL') | default('mistral') }}"
-          PGPT_OLLAMA_EMBEDDING_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_EMBEDDING_MODEL') | default('nomic-embed-text') }}"
-          PGPT_RAG_SIMILARITY_TOP_K: "{{ lookup('env', 'PGPT_RAG_SIMILARITY_TOP_K') | default('2') }}"
+        volume: "{{ common_volumes }}"
+        env: "{{ common_env }}"
       when: not use_gpus | bool
 
+    # Create a development container with GPU
     - name: Create dev container with GPU
       containers.podman.podman_container:
         name: "{{ pod_name }}_dev"
-        image: marcorepettocertx/dev:0.0.5
+        image: "{{ dev_image }}"
         state: "{{ container_state }}"
         detach: true
         pod: "{{ pod_name if not start_dev_only else None }}"
         device:
           - "nvidia.com/gpu=all"
-        volume:
-          - ./nirmatai_sdk:/app/nirmatai_sdk
-          #- ./data:/app/data
-          - ./experiments:/app/experiments
-          - ./docs:/app/docs
-          - ./htmlcov:/app/htmlcov
-          - ./pyproject.toml:/app/pyproject.toml
-        env:
-          MLFLOW_TRACKING_URI: "http://host.containers.internal:5000"
-          POD_NAME: "{{ pod_name }}"
-          PGPT_OLLAMA_LLM_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_LLM_MODEL') | default('mistral') }}"
-          PGPT_OLLAMA_EMBEDDING_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_EMBEDDING_MODEL') | default('nomic-embed-text') }}"
-          PGPT_RAG_SIMILARITY_TOP_K: "{{ lookup('env', 'PGPT_RAG_SIMILARITY_TOP_K') | default('2') }}"
+        volume: "{{ common_volumes }}"
+        env: "{{ common_env }}"
       when: use_gpus | bool
