@@ -794,3 +794,14 @@ def test_scorer_large_arrays_one_incorrect_entry():
     assert result[2] == 1.0 / 3
     assert result[3] < 1.0
     assert result[3] > 0.5
+
+def test_transform_to_numerical_large_set():
+    """Test _transform_to_numerical with a large set of labels."""
+    labels = [f"label_{i}" for i in range(1000)]
+    y_true = np.array(labels)
+    y_pred = np.array(labels)
+
+    scorer = Scorer(y_true, y_pred)
+    transformed = scorer._transform_to_numerical(y_true)
+    
+    assert np.array_equal(transformed, np.arange(1000))
