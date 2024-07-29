@@ -23,4 +23,4 @@ Here are just a few of the things that NirmatAI does well:
 from nirmatai_sdk.core import NirmatAI
 from nirmatai_sdk.telemetry import Scorer
 
-__all__ = ['NirmatAI', 'Scorer']
+__all__ = ["NirmatAI", "Scorer"]
