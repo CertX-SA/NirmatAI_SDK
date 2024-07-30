@@ -100,6 +100,7 @@ For any questions or concerns, please contact CertX at [ilker.gul@certx.com](mai
 - **Qdrant**: For embeddings storage.
 
 ### Summary:
+
 - **Introduction**: Describes the SDK and its main features.
 - **Installation**: Provides instructions on how to install the SDK.
 - **Project Structure**: Lists and explains the directory structure of the project.
