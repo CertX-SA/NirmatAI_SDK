@@ -11,17 +11,17 @@ endif
 
 run:
 	mkdir -p htmlcov
-	ansible-playbook create_pod_and_run_containers.yml \
+	ansible-playbook check_functions.yml \
 	-e "container_state=started" \
 	-e "use_gpus=true"
 
 run-dev:
 	mkdir -p htmlcov
-	ansible-playbook create_pod_and_run_containers.yml -e "container_state=started" -e "use_gpus=false" -e "start_dev_only=true"
+	ansible-playbook check_functions.yml -e "container_state=started" -e "use_gpus=false" -e "start_dev_only=true"
 
 stop:
 	@export POD_NAME=$(POD_NAME) && \
-	ansible-playbook create_pod_and_run_containers.yml -e "container_state=absent"
+	ansible-playbook check_functions.yml -e "container_state=absent"
 
 ###############
 # Private-GPT #
