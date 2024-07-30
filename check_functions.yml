@@ -13,15 +13,6 @@
     # Pod name derived from environment variable
     pod_name: "{{ lookup('env', 'POD_NAME') | default(lookup('env', 'USER'), true) | regex_replace('/', '_') }}"
 
-    # Common volumes to be mounted in the development container
-    common_volumes:
-      - ./nirmatai_sdk:/app/nirmatai_sdk
-      #- ./data:/app/data  # Uncomment if needed
-      #- ./experiments:/app/experiments  # Uncomment if needed
-      - ./docs:/app/docs
-      - ./htmlcov:/app/htmlcov
-      - ./pyproject.toml:/app/pyproject.toml
-
     # Common environment variables for the development container
     common_env:
       MLFLOW_TRACKING_URI: "http://host.containers.internal:5000"
