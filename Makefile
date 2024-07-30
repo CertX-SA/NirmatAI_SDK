@@ -23,36 +23,6 @@ stop:
 	@export POD_NAME=$(POD_NAME) && \
 	ansible-playbook check_functions.yml -e "container_state=absent"
 
-###############
-# Private-GPT #
-###############
-FILE := privateGPT/version.txt
-VERSION :=$(file < $(FILE))
-
-# Gets rid of the .git folder to avoid VsCode from trying to index it
-login:
-	podman login -u $(DOCKER_USERNAME) -p $(DOCKER_PASSWORD)
-
-clone-privateGPT:
-	git clone https://github.com/imartinez/privateGPT
-
-build-image:
-	cd privateGPT && \
-	podman build -t $(DOCKER_USERNAME)/privategpt:$(VERSION) -f Dockerfile.external .
-
-push:
-	podman push $(DOCKER_USERNAME)/privategpt:$(VERSION)
-
-build-dev-and-client:
-	podman build -t $(DOCKER_USERNAME)/dev:0.0.3 -f Dockerfile.dev .
-	podman build -t $(DOCKER_USERNAME)/client:0.0.3 -f Dockerfile.client .
-
-build-push: clone-privateGPT login build-image push
-
-push-dev-and-client:
-	podman push $(DOCKER_USERNAME)/dev:0.0.3
-	podman push $(DOCKER_USERNAME)/client:0.0.3
-
 ###########
 # Quality #
 ###########

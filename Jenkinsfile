@@ -14,7 +14,7 @@ pipeline {
             }
         }
 
-        stage("DCV Pull") {
+        stage("DVC Pull") {
             steps {
                 sh "dvc pull"
             }
