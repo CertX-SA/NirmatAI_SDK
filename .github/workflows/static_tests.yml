@@ -20,7 +20,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       # Checkout the repository
-      - uses: ./.github/workflows/actions/install_dependencies
+      - name: Setting up the relevant container and run development
+        uses: ./.github/workflows/actions/install_dependencies
       # Run custom action to install dependencies
 
   checks:
