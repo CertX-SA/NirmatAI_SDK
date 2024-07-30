@@ -12,11 +12,20 @@ jobs:
     permissions:
       issues: write  # Grant write permissions to issues
     steps:
-      - name: Label issue  # Name of the step
-        run: gh issue edit ${{ github.event.issue.number }} --add-label "triage"
-        # Command to add the "triage" label to the issue
+      - name: Check if label exists  # Step to check if the "triage" label exists
+        id: check_label
+        run: |
+          if ! gh label list --repo ${{ github.repository }} | grep -q "^triage$"; then
+            echo "Label 'triage' does not exist, creating it."
+            gh label create "triage" --description "Issues that need triage" --color "#ffffff" --repo ${{ github.repository }}
+          else
+            echo "Label 'triage' exists."
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GitHub token for authentication, automatically provided by GitHub Actions
+
+      - name: Label issue  # Step to label the issue
+        run: gh issue edit ${{ github.event.issue.number }} --add-label "triage"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          # The repository on which the workflow is running
