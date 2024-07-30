@@ -32,7 +32,7 @@
       PGPT_OLLAMA_LLM_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_LLM_MODEL') | default('mistral') }}"
       PGPT_OLLAMA_EMBEDDING_MODEL: "{{ lookup('env', 'PGPT_OLLAMA_EMBEDDING_MODEL') | default('nomic-embed-text') }}"
       PGPT_RAG_SIMILARITY_TOP_K: "{{ lookup('env', 'PGPT_RAG_SIMILARITY_TOP_K') | default('2') }}"
-  
+
   tasks:
     # Create a pod if not starting the dev container only
     - name: Create pod
