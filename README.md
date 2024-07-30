@@ -29,16 +29,12 @@ NirmatAI_SDK/
 │   │   ├── actions/
 │   │   │   ├── install_dependencies/
 │   │   │   │   ├── action.yml
-│   │   ├── build_docker.yml
 │   │   ├── handling-issues.yml
 │   │   ├── static_tests.yml
 ├── docs/
-│   ├── Makefile
-│   ├── make.bat
-│   ├── misc/
-│   │   ├── Automated MS Audit.pdf
 │   ├── source/
 │   │   ├── conf.py
+│   │   ├── dev.rst
 │   │   ├── index.rst
 ├── nirmatai_sdk/
 │   ├── __init__.py
@@ -49,6 +45,8 @@ NirmatAI_SDK/
 │   │   ├── test_core_unit.py
 │   │   ├── test_telemetry_unit.py
 ├── .pre-commit-config.yaml
+├── Dockerfile.client
+├── Dockerfile.dev
 ├── check_functions.yml
 ├── LICENSE
 ├── Makefile
