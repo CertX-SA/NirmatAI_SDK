@@ -62,17 +62,30 @@ Here's a basic example of how to use the NirmatAI SDK:
 from nirmatai_sdk.core import NirmatAI
 from nirmatai_sdk.telemetry import Scorer
 
-# Initialize the NirmatAI instance
-nirmat_ai = NirmatAI()
+# Initialize the NirmataDemo instance
+demo = NirmatAI(
+    system_prompt="YOUR PROMPT SELECTION",
+    base_url=f"YOUR_BASE_URL",
+    timeout=60 * 60,
+    verbose=3,
+    prompt="""
+    The requirement to be evaluated is: {req_item}
+    The means of compliance is: {moc_item}
+    """,
+)
 
-# Example method usage
-nirmat_ai.some_method()
+# Ingest files
+demo.ingest(directory="your/path/to/files/")
 
-# Initialize the Scorer
-scorer = Scorer()
+# Load requirements and get the results
+demo.load_requirements(reqs_file="your/path/to/requirements")
 
-# Example scoring
-score = scorer.calculate_score()
+# Process the requirements
+demo.process_requirements()
+
+# Score the results
+score = Scorer(demo.y_true, demo.y_pred)
+cm, cm_path, M_MAE, k = score.run_scores()
 ```
 
 ## License
