@@ -23,14 +23,6 @@ stop:
 	@export POD_NAME=$(POD_NAME) && \
 	ansible-playbook create_pod_and_run_containers.yml -e "container_state=absent"
 
-##############
-# Experiment #
-##############
-
-run-experiments:
-	@export POD_NAME=$(POD_NAME) && \
-	python3 run_experiments.py
-
 ###############
 # Private-GPT #
 ###############
@@ -64,21 +56,6 @@ push-dev-and-client:
 ###########
 # Quality #
 ###########
-
-# Requirements
-## Validation TODO: create a pod to avoid conflicts with the local server
-# validate-requirements:
-# 	poetry run doorstop
-
-# validate-requirements-strict:
-# 	poetry run doorstop --error-all
-
-## Publication
-# publish-requirements:
-# 	poetry run doorstop publish all ./doorstop/build/
-
-# serve-requirements:
-# 	poetry run doorstop-server
 
 CONTAINER_NAME := $(POD_NAME)_dev
 
