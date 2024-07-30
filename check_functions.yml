@@ -71,6 +71,7 @@
         state: "{{ container_state }}"
         detach: true
         pod: "{{ pod_name if not start_dev_only else None }}"
-        volume: "{{ common_volumes }}"
+        volume:
+          - ./:/app
         env: "{{ common_env }}"
       when: not use_gpus | bool

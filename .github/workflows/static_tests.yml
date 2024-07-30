@@ -17,7 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     # Use the latest Ubuntu environment
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       # Checkout the repository
       - uses: ./.github/workflows/actions/install_dependencies
       # Run custom action to install dependencies
