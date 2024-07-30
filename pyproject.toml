@@ -1,19 +1,13 @@
+# Project metadata
 [project]
-name = "nirmatai_sdk"
-version = "0.1.0"
-description = "NirmatAI Software Development Kit"
-authors = [{ name = "Ilker Gul", email = "ilker.gul@certx.com" }]
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "pgpt-python @ git+https://github.com/mrepetto-certx/pgpt-python.git@main",
-    "pandas==2.2.2",
-    "openpyxl==3.1.4",
-    "numpy==1.26.4",
-    "seaborn==0.13.2",
-    "lxml==5.2.2",
-    "scikit-learn==1.5.1",
-]
+name = "nirmatai_sdk"  # Name of the project
+version = "0.1.0"  # Version of the project
+description = "NirmatAI Software Development Kit"  # Short description of the project
+authors = [{ name = "Ilker Gul", email = "ilker.gul@certx.com" }]  # Author details
+readme = "README.md"  # Path to the README file
+requires-python = ">=3.12"  # Minimum required Python version
+
+# Project classifiers for PyPI
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -23,10 +17,24 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: SDK",
 ]
-[project.urls]
-Homepage = "https://github.com/CertX-SA/NirmatAI_SDK"
-Issues = "https://github.com/CertX-SA/NirmatAI_SDK/issues"
 
+# Project dependencies
+dependencies = [
+    "pgpt-python @ git+https://github.com/mrepetto-certx/pgpt-python.git@main",
+    "pandas==2.2.2",
+    "openpyxl==3.1.4",
+    "numpy==1.26.4",
+    "seaborn==0.13.2",
+    "lxml==5.2.2",
+    "scikit-learn==1.5.1",
+]
+
+# Project URLs
+[project.urls]
+Homepage = "https://github.com/CertX-SA/NirmatAI_SDK"  # Project homepage
+Issues = "https://github.com/CertX-SA/NirmatAI_SDK/issues"  # Issue tracker
+
+# Optional dependencies
 [project.optional-dependencies]
 dev = [
     "ruff==0.2.2",
@@ -40,11 +48,11 @@ dev = [
 ]
 docs = ["sphinx==7.3.7", "sphinx-rtd-theme==2.0.0"]
 
-# ruff
+# Ruff configuration
 [tool.ruff]
-target-version = "py312"
+target-version = "py312"  # Target Python version
 
-# See all rules at https://beta.ruff.rs/docs/rules/
+# Selected linting rules
 lint.select = [
     "E",   # pycodestyle
     "W",   # pycodestyle
@@ -62,41 +70,48 @@ lint.select = [
     "RUF", # Ruff-specific rules
 ]
 
+# Pydocstyle configuration
 [tool.ruff.lint.pydocstyle]
-convention = "google"
+convention = "google"  # Documentation style convention
 
+# Pycodestyle configuration
 [tool.ruff.lint.pycodestyle]
-max-doc-length = 88
+max-doc-length = 88  # Maximum length of documentation lines
 
+# Flake8 Tidy Imports configuration
 [tool.ruff.lint.flake8-tidy-imports]
-ban-relative-imports = "all"
+ban-relative-imports = "all"  # Ban all relative imports
 
+# Flake8 Type Checking configuration
 [tool.ruff.lint.flake8-type-checking]
 strict = true
-runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]  # Classes to evaluate at runtime
 
-## mypy
+# Mypy configuration
 [tool.mypy]
-python_version = "3.12"
-strict = true
-check_untyped_defs = false
-explicit_package_bases = true
-warn_unused_ignores = false
-exclude = ["tests"]
-ignore_missing_imports = true
+python_version = "3.12"  # Target Python version
+strict = true  # Enable strict type checking
+check_untyped_defs = false  # Disable checking untyped definitions
+explicit_package_bases = true  # Require explicit package bases
+warn_unused_ignores = false  # Disable warnings for unused ignores
+exclude = ["tests"]  # Exclude test directory
+ignore_missing_imports = true  # Ignore missing imports
 
+# Pytest configuration
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["nirmatai_sdk/tests"]
-addopts = ["--import-mode=importlib"]
+asyncio_mode = "auto"  # Auto mode for asyncio
+testpaths = ["nirmatai_sdk/tests"]  # Test paths
+addopts = ["--import-mode=importlib"]  # Additional options
 
-# When installing
+# Build system configuration
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.0", "wheel"]  # Required build tools
+build-backend = "setuptools.build_meta"  # Build backend
 
+# Setuptools configuration
 [tool.setuptools]
-include-package-data = true
+include-package-data = true  # Include package data
 
+# Setuptools package finding configuration
 [tool.setuptools.packages.find]
-include = ["nirmatai_sdk", "nirmatai_sdk.*"]
+include = ["nirmatai_sdk", "nirmatai_sdk.*"]  # Packages to include
