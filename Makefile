@@ -44,6 +44,11 @@ dev-running:
 ###########
 
 # Documentation
+# Other checks run as pre-commit hooks and in github actions
+ansible-lint:
+	@echo "Running ansible-lint..."
+	@podman exec $(CONTAINER_NAME) ansible-lint
+
 ## Build
 build-docs:
 	podman exec $(CONTAINER_NAME) sphinx-build docs/source docs/build

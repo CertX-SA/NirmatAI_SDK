@@ -24,6 +24,11 @@ repos:
         entry: make dev-exists
         language: system
         stages: [pre-commit, pre-merge-commit, pre-push, manual]
+      - id: ansible-lint
+        name: Linting (ansible-lint)
+        entry: make ansible-lint
+        language: system
+        stages: [pre-commit, pre-merge-commit, pre-push, manual]
       - id: ruff
         name: Formatting (ruff)
         entry: make format-code
