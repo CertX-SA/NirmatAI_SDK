@@ -3,7 +3,7 @@ name = "nirmatai_sdk"
 version = "0.1.0"
 description = "NirmatAI Software Development Kit"
 authors = [{ name = "Ilker Gul", email = "ilker.gul@certx.com" }]
-readme = { file = "README.md", content-type = "text/markdown" }
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pgpt-python @ git+https://github.com/mrepetto-certx/pgpt-python.git@main",
@@ -19,13 +19,13 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: SDK",
 ]
-urls = { "Homepage" = "https://github.com/CertX-SA/NirmatAI_SDK" }
-license = { text = "MIT" }
+[project.urls]
+Homepage = "https://github.com/CertX-SA/NirmatAI_SDK"
+Issues = "https://github.com/CertX-SA/NirmatAI_SDK/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -91,7 +91,7 @@ addopts = ["--import-mode=importlib"]
 
 # When installing
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
