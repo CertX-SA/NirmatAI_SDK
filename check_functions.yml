@@ -11,10 +11,7 @@
     start_dev_only: false
 
     # Pod name derived from environment variable
-    pod_name: "{{ lookup('env', 'POD_NAME') | regex_replace('/', '_') }}"
-
-    # Image used for the development container
-    dev_image: marcorepettocertx/dev:0.0.5
+    pod_name: "{{ lookup('env', 'POD_NAME') | default(lookup('env', 'USER'), true) | regex_replace('/', '_') }}"
 
     # Common volumes to be mounted in the development container
     common_volumes:
