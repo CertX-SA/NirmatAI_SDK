@@ -34,38 +34,46 @@
       PGPT_RAG_SIMILARITY_TOP_K: "{{ lookup('env', 'PGPT_RAG_SIMILARITY_TOP_K') | default('2') }}"
 
   tasks:
+    - name: Build client image
+      containers.podman.podman_image:
+        name: nirmatai_sdk_client
+        state: build
+        force: true
+        build:
+          file: ./Dockerfile.client
+      when: not start_dev_only | bool
+
+    - name: Build development image
+      containers.podman.podman_image:
+        name: nirmatai_sdk_dev
+        state: build
+        force: true
+        build:
+          file: ./Dockerfile.dev
+
     # Create a pod if not starting the dev container only
     - name: Create pod
       containers.podman.podman_pod:
         name: "{{ pod_name }}"
         state: "{{ container_state }}"
         recreate: true
-        ports:
-          - 8000:8080
+
+    - name: Create client container
+      containers.podman.podman_container:
+        name: "{{ pod_name }}_client"
+        image: nirmatai_sdk_client:latest
+        state: "{{ container_state }}"
+        pod: "{{ pod_name }}"
       when: not start_dev_only | bool
 
     # Create a development container without GPU
     - name: Create dev container
       containers.podman.podman_container:
         name: "{{ pod_name }}_dev"
-        image: "{{ dev_image }}"
+        image: nirmatai_sdk_dev:latest
         state: "{{ container_state }}"
         detach: true
         pod: "{{ pod_name if not start_dev_only else None }}"
         volume: "{{ common_volumes }}"
         env: "{{ common_env }}"
       when: not use_gpus | bool
-
-    # Create a development container with GPU
-    - name: Create dev container with GPU
-      containers.podman.podman_container:
-        name: "{{ pod_name }}_dev"
-        image: "{{ dev_image }}"
-        state: "{{ container_state }}"
-        detach: true
-        pod: "{{ pod_name if not start_dev_only else None }}"
-        device:
-          - "nvidia.com/gpu=all"
-        volume: "{{ common_volumes }}"
-        env: "{{ common_env }}"
-      when: use_gpus | bool

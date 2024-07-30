@@ -1,10 +1,6 @@
-# Load environment variables from .env file
-ifneq ("$(wildcard .env)","")
-include .env
-else
-$(warning .env file not found - using default values)
-endif
-# comment here
+# If environment variable POD_NAME is not set, set it to the user name
+POD_NAME ?= $(shell whoami)
+
 #######
 # Run #
 #######
@@ -20,14 +16,32 @@ run-dev:
 	ansible-playbook check_functions.yml -e "container_state=started" -e "use_gpus=false" -e "start_dev_only=true"
 
 stop:
+	@echo "Stopping the playbook..."
 	@export POD_NAME=$(POD_NAME) && \
 	ansible-playbook check_functions.yml -e "container_state=absent"
+
+CONTAINER_NAME := $(POD_NAME)_dev
+
+###########
+# Container Check #
+###########
+
+# Check that the podman container named $(POD_NAME)_dev exists
+dev-exists:
+	@echo "Checking that the container $(CONTAINER_NAME) exists..."
+	@podman container exists $(CONTAINER_NAME) || (echo "Container $(CONTAINER_NAME) does not exist. Please create it." && exit 1)
+	@echo "Container $(CONTAINER_NAME) exists."
+
+# Check that the podman container named $(POD_NAME)_dev is running
+dev-running:
+	@echo "Checking that the container $(CONTAINER_NAME) is running..."
+	@podman container exists $(CONTAINER_NAME) || (echo "Container $(CONTAINER_NAME) does not exist. Please create it." && exit 1)
+	@podman container inspect $(CONTAINER_NAME) | jq -r '.[0].State.Status' | grep running || (echo "Container $(CONTAINER_NAME) is not running. Please start it." && exit 1)
+	@echo "Container $(CONTAINER_NAME) is running."
 
 ###########
 # Quality #
 ###########
-
-CONTAINER_NAME := $(POD_NAME)_dev
 
 # Documentation
 ## Build
