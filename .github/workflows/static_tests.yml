@@ -31,6 +31,7 @@ jobs:
     strategy:
       matrix:
         quality-command:
+          - ansible-lint
           - check-format-code
           # Command to check code formatting
           - type-check
