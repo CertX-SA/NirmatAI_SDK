@@ -64,14 +64,11 @@ from nirmatai_sdk.telemetry import Scorer
 
 # Initialize the NirmataDemo instance
 demo = NirmatAI(
-    system_prompt="YOUR PROMPT SELECTION",
+    system_prompt="YOUR SYSTEM PROMPT SELECTION",
     base_url=f"YOUR_BASE_URL",
     timeout=60 * 60,
     verbose=3,
-    prompt="""
-    The requirement to be evaluated is: {req_item}
-    The means of compliance is: {moc_item}
-    """,
+    prompt="YOUR USER PROMPT SELECTION",
 )
 
 # Ingest files
