@@ -20,7 +20,7 @@
     common_volumes:
       - ./nirmatai_sdk:/app/nirmatai_sdk
       #- ./data:/app/data  # Uncomment if needed
-      - ./experiments:/app/experiments
+      #- ./experiments:/app/experiments  # Uncomment if needed
       - ./docs:/app/docs
       - ./htmlcov:/app/htmlcov
       - ./pyproject.toml:/app/pyproject.toml

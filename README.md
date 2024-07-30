@@ -49,8 +49,6 @@ NirmatAI_SDK/
 │   ├── source/
 │   │   ├── conf.py
 │   │   ├── index.rst
-├── experiments/
-│   ├── exp_1.py
 ├── nirmatai_sdk/
 │   ├── __init__.py
 │   ├── core.py
