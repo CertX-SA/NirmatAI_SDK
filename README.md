@@ -32,15 +32,6 @@ NirmatAI_SDK/
 │   │   ├── build_docker.yml
 │   │   ├── handling-issues.yml
 │   │   ├── static_tests.yml
-├── .pre-commit-config.yaml
-├── Dockerfile.client
-├── Dockerfile.dev
-├── Jenkinsfile
-├── LICENSE
-├── Makefile
-├── README.md
-├── check_functions.yml
-├── deploy.yml
 ├── docs/
 │   ├── Makefile
 │   ├── make.bat
@@ -57,7 +48,12 @@ NirmatAI_SDK/
 │   │   ├── test_core_integration.py
 │   │   ├── test_core_unit.py
 │   │   ├── test_telemetry_unit.py
+├── .pre-commit-config.yaml
+├── check_functions.yml
+├── LICENSE
+├── Makefile
 ├── pyproject.toml
+├── README.md
 ```
 
 ## Usage
