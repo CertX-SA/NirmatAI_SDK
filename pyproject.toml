@@ -36,6 +36,7 @@ dev = [
     "pytest-asyncio==0.23.5",
     "types-pyyaml==6.0.12.12",
     "mlflow==2.13.0",
+    "ansible-lint==24.7.0",
 ]
 docs = ["sphinx==7.3.7", "sphinx-rtd-theme==2.0.0"]
 
