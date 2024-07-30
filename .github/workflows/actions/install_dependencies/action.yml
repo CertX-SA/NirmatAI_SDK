@@ -5,10 +5,6 @@ inputs:
     required: true
     type: string
     default: "3.12.1"
-  poetry_version:
-    required: true
-    type: string
-    default: "1.8.1"
 
 runs:
   using: composite
