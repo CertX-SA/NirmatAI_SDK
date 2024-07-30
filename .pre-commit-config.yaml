@@ -18,6 +18,7 @@ repos:
       - id: check-added-large-files
       # This hook checks for unresolved merge conflicts in files.
       - id: check-merge-conflict
+      - id: detect-private-key
 
   - repo: local
     hooks:
