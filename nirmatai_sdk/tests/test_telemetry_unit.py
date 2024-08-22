@@ -18,12 +18,13 @@ def test_scorer_valid_labels():
     )
 
     scorer = Scorer(y_true, y_pred)
-    assert scorer.y_true is y_true
-    assert scorer.y_pred is y_pred
+    assert np.array_equal(scorer.y_true, y_true)
+    assert np.array_equal(scorer.y_pred, y_pred)
+
 
 def test_scorer_invalid_y_true_labels():
     """Raise a ValueError if y_true contains invalid labels."""
-    y_true = np.array(["C", "B", "B", "A"])
+    y_true = np.array(["C", "B", "B"])
     y_pred = np.array(
         ["full-compliance", "minor non-conformity", "major non-conformity"]
     )
@@ -31,15 +32,17 @@ def test_scorer_invalid_y_true_labels():
     with pytest.raises(ValueError, match="y_true contains invalid labels"):
         Scorer(y_true, y_pred)
 
+
 def test_scorer_invalid_y_pred_labels():
     """Raise a ValueError if y_pred contains invalid labels."""
     y_true = np.array(
         ["full-compliance", "minor non-conformity", "major non-conformity"]
     )
-    y_pred = np.array(["C", "B", "B", "A"])
+    y_pred = np.array(["C", "B", "B"])
 
     with pytest.raises(ValueError, match="y_pred contains invalid labels"):
         Scorer(y_true, y_pred)
+
 
 def test_scorer_mismatched_lengths():
     """Raise a ValueError if y_true and y_pred have different lengths."""
@@ -51,6 +54,7 @@ def test_scorer_mismatched_lengths():
     with pytest.raises(ValueError, match="y_true and y_pred must have the same length"):
         Scorer(y_true, y_pred)
 
+
 def test_scorer_empty_arrays():
     """Raise a ValueError if y_true or y_pred are empty."""
     y_true = np.array([])
@@ -58,6 +62,7 @@ def test_scorer_empty_arrays():
 
     with pytest.raises(ValueError, match="y_true and y_pred must not be empty"):
         Scorer(y_true, y_pred)
+
 
 def test_calculate_conf_matrix_cm():
     """When all labels are correct, the confusion matrix SHALL be a diagonal matrix.
@@ -704,6 +709,7 @@ def test_run_scores_correct():
     assert result[2] == 0.0
     assert result[3] == 1.0
 
+
 # More Unit Tests for ensuring the reliability
 def test_scorer_large_arrays_perfect_prediction():
     """Ensure Scorer calculates correct metrics for large arrays."""
@@ -713,18 +719,13 @@ def test_scorer_large_arrays_perfect_prediction():
     scorer = Scorer(y_true, y_pred)
     result = scorer.run_scores()
 
-    expected_cm = np.array(
-        [
-            [1000000, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
-        ]
-    )
+    expected_cm = np.array([[1000000, 0, 0], [0, 0, 0], [0, 0, 0]])
 
     assert np.array_equal(result[0], expected_cm)
     assert result[1] == "/tmp/cm.png"
     assert result[2] == 0.0
     assert result[3] == 1.0
+
 
 def test_scorer_large_arrays_random_predictions():
     """Ensure Scorer calculates correct metrics for large arrays."""
@@ -741,53 +742,35 @@ def test_scorer_large_arrays_random_predictions():
     result = scorer.run_scores()
 
     assert result[1] == "/tmp/cm.png"
-    assert 8/9 - 0.01 <= result[2] <= 8/9 + 0.01
+    assert 8 / 9 - 0.01 <= result[2] <= 8 / 9 + 0.01
     assert -0.01 <= result[3] <= 0.01
+
 
 def test_scorer_large_arrays_one_class_misclassified():
     """Ensure Scorer calculates correct metrics for large arrays."""
-    y_true = np.array(
-        ["full-compliance"] * 500000 + ["minor non-conformity"] * 500000
-    )
-    y_pred = np.array(
-        ["full-compliance"] * 500000 + ["major non-conformity"] * 500000
-        )
+    y_true = np.array(["full-compliance"] * 500000 + ["minor non-conformity"] * 500000)
+    y_pred = np.array(["full-compliance"] * 500000 + ["major non-conformity"] * 500000)
 
     scorer = Scorer(y_true, y_pred)
     result = scorer.run_scores()
 
-    expected_cm = np.array(
-        [
-            [500000, 0, 0],
-            [0, 0, 500000],
-            [0, 0, 0]
-        ]
-    )
+    expected_cm = np.array([[500000, 0, 0], [0, 0, 500000], [0, 0, 0]])
 
     assert np.array_equal(result[0], expected_cm)
     assert result[1] == "/tmp/cm.png"
     assert result[2] == 1.0 / 3
     assert result[3] == 0.6666666666666667
 
+
 def test_scorer_large_arrays_one_incorrect_entry():
     """Ensure Scorer calculates correct metrics for large arrays."""
-    y_true = np.array(
-        ["full-compliance"] * 999999 + ["minor non-conformity"] * 1
-    )
-    y_pred = np.array(
-        ["full-compliance"] * 999999 + ["major non-conformity"] * 1
-        )
+    y_true = np.array(["full-compliance"] * 999999 + ["minor non-conformity"] * 1)
+    y_pred = np.array(["full-compliance"] * 999999 + ["major non-conformity"] * 1)
 
     scorer = Scorer(y_true, y_pred)
     result = scorer.run_scores()
 
-    expected_cm = np.array(
-        [
-            [999999, 0, 0],
-            [0, 0, 1],
-            [0, 0, 0]
-        ]
-    )
+    expected_cm = np.array([[999999, 0, 0], [0, 0, 1], [0, 0, 0]])
 
     assert np.array_equal(result[0], expected_cm)
     assert result[1] == "/tmp/cm.png"
@@ -795,14 +778,12 @@ def test_scorer_large_arrays_one_incorrect_entry():
     assert result[3] < 1.0
     assert result[3] > 0.5
 
+
 def test_transform_to_numerical_large_set():
     """Test _transform_to_numerical with a large set of labels."""
     labels = [f"label_{i}" for i in range(1000)]
     y_true = np.array(labels)
     y_pred = np.array(labels)
 
-    with pytest.raises(
-        ValueError,
-        match="y_true contains invalid labels"
-    ):
+    with pytest.raises(ValueError, match="y_true contains invalid labels"):
         Scorer(y_true, y_pred)

@@ -108,4 +108,3 @@ install-precommit:
 # Setup environment
 setup: verify-software install-precommit
 	@echo "You are ready to go!"
-

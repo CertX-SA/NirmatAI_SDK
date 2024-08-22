@@ -1,7 +1,6 @@
 """Core module for NirmataAI."""
 
 import os
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -102,7 +101,7 @@ class NirmatAI:
             # health check request to the instance and returns the response
             return self.client.health.health()
         except Exception as error:
-            #log the error and return a default HealthResponse with status "ko"
+            # log the error and return a default HealthResponse with status "ko"
             print(f"Error checking health: {error!s}")
             return HealthResponse(status="ko")
 
@@ -222,7 +221,7 @@ class NirmatAI:
         if not reqs_file.endswith(".xlsx"):
             raise ValueError("Requirements file is not an Excel file.")
 
-        #Load the requirements from the Excel file into a pandas DataFrame
+        # Load the requirements from the Excel file into a pandas DataFrame
         self.reqs = pd.read_excel(reqs_file)
 
         # Check if the colums Requirement and Potential Means of Compliance exist
@@ -327,6 +326,37 @@ class NirmatAI:
         # Join all formatted sources into a single string, separated by a semicolon
         return "; ".join(formatted_sources)
 
+    def __get_completion_formatted(
+        self, req_item: str, moc_item: str, attempts: int = 5
+    ) -> tuple[str, list[Chunk]]:
+        """Get the completion from the LLM.
+
+        This method uses the LLM to generate a completion based on the given
+        requirement.
+        It retrieves the result, checks for errors, and returns the completion message
+        along with the list of source chunks. If the completion does not conform to the
+        expected format, it retries the completion up to the specified number of
+        attempts.
+
+        :param req_item: The requirement item to be evaluated.
+        :type req_item: str
+        :param moc_item: The means of compliance item.
+        :type moc_item: str
+        :param attempts: The number of attempts to get the completion, defaults to 5.
+        :type attempts: int, optional
+        :return: A tuple containing the completion message and list of source chunks
+        :rtype: tuple[str, list[Chunk]]
+        """
+        out = "; LLM did not converge to right format, with attempts:\n"
+        for i in range(attempts):
+            message, sources = self.__get_completion(req_item, moc_item)
+            if message.count(";") in [1, 2]:
+                out = message
+                break
+            else:
+                out += f"\n{i+1}. {message.replace(";", "_")}"
+        return out, sources
+
     def process_requirements(self) -> pd.DataFrame:
         """Process the requirements and get the results.
 
@@ -361,28 +391,7 @@ class NirmatAI:
             if pd.isna(moc_item):
                 moc_item = "Written documentation shall be provided to comply."
 
-            message, sources = self.__get_completion(req_item, moc_item)
-
-            # If the number of ; in messagge is not between 1 and 2 raise a warning
-            # Initialize a counter
-            attempt_count = 0
-
-            # Loop with a maximum of 5 attempts
-            while message.count(";") not in [1, 2]:
-                if attempt_count < 5:
-                    warnings.warn(
-                        "The completion does not have the correct format.",
-                        UserWarning,
-                        stacklevel=2,
-                    )
-                    message, sources = self.__get_completion(req_item, moc_item)
-                    attempt_count += 1  # Increment the counter
-                else:
-                    # Set the message after 5 unsuccessful attempts and exit the loop
-                    message = (
-                        "major non-conformity; LLM did not converge to right format"
-                    )
-                    break
+            message, sources = self.__get_completion_formatted(req_item, moc_item)
 
             if self.verbose >= 2:
                 print("Result: ", message)
@@ -435,7 +444,7 @@ class NirmatAI:
                 return status
 
         # Default to "major non-conformity" if no specific status is found
-        return "major non-conformity"
+        return ""
 
     def save_results(
         self, dataframe: pd.DataFrame, output_path: str, attach_reqs: bool = False
