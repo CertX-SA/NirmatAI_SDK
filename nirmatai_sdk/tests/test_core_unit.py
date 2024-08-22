@@ -1,6 +1,8 @@
 # type: ignore
 """"Unit tests for the core module of NirmatAI."""
 
+from unittest.mock import patch
+
 import pandas as pd
 from pgpt_python.types import Chunk, IngestedDoc
 
@@ -247,9 +249,9 @@ def test_extract_comp_status_major_non_conformity():
     # Check the result
     assert result == [
         "major non-conformity",
+        "",
         "major non-conformity",
-        "major non-conformity",
-        "major non-conformity",
+        "",
     ]
 
 
@@ -317,10 +319,10 @@ def test_extract_comp_status_last_resort():
 
     # Check the result
     assert result == [
-        "major non-conformity",
-        "major non-conformity",
-        "major non-conformity",
-        "major non-conformity",
+        "",
+        "",
+        "",
+        "",
     ]
 
 
@@ -505,3 +507,28 @@ def test__format_sources(tmp_path):
     result = nirmatai._NirmatAI__format_sources(sources)
 
     assert result == "doc: test.txt\npage: 1\nchunk: This is a chunk\n\n"
+
+
+def test__format_check_on_message():
+    """Test the __format_check method of the NirmatAI class."""
+    with patch.object(NirmatAI, "_NirmatAI__get_completion") as mock_get_completion:
+        # Define the side effect to return different values for each call
+        mock_get_completion.side_effect = [
+            ["mocked_value_1", "mocked_ref_1"],
+            ["mocked_value_2;;;", "mocked_ref_2"],
+            [";;;mocked_value_3", "mocked_ref_3"],
+            ["mocked_value_4", "mocked_ref_4"],
+            [";mocked;value;5", "mocked_ref_5"],
+        ]
+
+        # Create an instance of NirmatAI
+        nirmatai = NirmatAI()
+
+        message, sources = nirmatai._NirmatAI__get_completion_formatted(
+            req_item="mock", moc_item="mock"
+        )
+
+        assert (
+            message
+            == "; LLM did not converge to right format, with attempts:\n\n1. mocked_value_1\n2. mocked_value_2___\n3. ___mocked_value_3\n4. mocked_value_4\n5. _mocked_value_5"  # noqa: E501
+        )

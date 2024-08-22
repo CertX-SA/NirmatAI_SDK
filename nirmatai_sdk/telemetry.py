@@ -34,6 +34,7 @@ class Scorer:
         mlflow.log_metric("Kappa", k)
 
     """
+
     def __init__(self, y_true: npt.NDArray[Any], y_pred: npt.NDArray[Any]) -> None:
         """Initialize a Telemetry object.
 
@@ -47,20 +48,30 @@ class Scorer:
         :raises ValueError: If `y_true` or `y_pred` contains invalid labels.
 
         """
-        #Define the valid labels for the classification
+        # Ensure that y_true and y_pred have the same length
+        if len(y_true) != len(y_pred):
+            raise ValueError("y_true and y_pred must have the same length")
+
+        # Ensure that y_true and y_pred are not empty
+        if len(y_true) == 0 or len(y_pred) == 0:
+            raise ValueError("y_true and y_pred must not be empty")
+
+        # Define the valid labels for the classification
         self.labels = [
             "full-compliance",
             "minor non-conformity",
             "major non-conformity",
         ]
 
-        # Ensure that y_ture and y_pred are not empty
-        if len(y_true) == 0 or len(y_pred) == 0:
-            raise ValueError("y_true and y_pred must not be empty")
-
         # Check that y_true contains only the labels in the labels list
         if not all(label in self.labels for label in y_true):
             raise ValueError("y_true contains invalid labels")
+
+        # Create a mask to filter out rows containing empty strings in y_pred
+        mask = np.array([len(str(label)) > 0 for label in y_pred])
+        # Filter out rows containing empty strings in y_pred and y_true
+        y_pred = y_pred[mask]
+        y_true = y_true[mask]
 
         # Check that y_pred contains only the labels in the labels list
         if not all(label in self.labels for label in y_pred):
@@ -69,10 +80,6 @@ class Scorer:
         # Assign the true and predicted labels to the instance variables
         self.y_true = y_true
         self.y_pred = y_pred
-
-        #Ensure that y_true and y_pred have the same length
-        if len(self.y_true) != len(self.y_pred):
-            raise ValueError("y_true and y_pred must have the same length")
 
     def calculate_conf_matrix(self) -> tuple[npt.NDArray[np_int], str]:
         """Calculate the confusion matrix and save the corresponding plot.
@@ -84,9 +91,9 @@ class Scorer:
         :rtype: tuple[npt.NDArray[np_int], str]
         """
         cm: npt.NDArray[np_int] = confusion_matrix(
-            self.y_true,                # Array of true labels
-            self.y_pred,                # Array of predicted labels
-            labels=self.labels,         # List of labels to index the matrix
+            self.y_true,  # Array of true labels
+            self.y_pred,  # Array of predicted labels
+            labels=self.labels,  # List of labels to index the matrix
         )
 
         # Plot and log the confusion matrix
@@ -130,7 +137,7 @@ class Scorer:
         cm_path = "/tmp/cm.png"
         plt.savefig(cm_path)
 
-        #Close the plot to free up the memory
+        # Close the plot to free up the memory
         plt.close()
 
         return cm_path
@@ -215,9 +222,7 @@ class Scorer:
         # Build the confusion matrix
         num_classes = len(self.labels)
         observed = confusion_matrix(
-            y_true_num,
-            y_pred_num,
-            labels=list(range(num_classes))
+            y_true_num, y_pred_num, labels=list(range(num_classes))
         )
         num_sizes = float(len(y_true_num))
 
@@ -225,7 +230,7 @@ class Scorer:
         kappa_weights = np.empty((num_classes, num_classes))
         for i in range(num_classes):
             for j in range(num_classes):
-                kappa_weights[i, j] = (i - j)**2
+                kappa_weights[i, j] = (i - j) ** 2
 
         # Normalize the histogram of true and predicted labels
         hist_true = (
