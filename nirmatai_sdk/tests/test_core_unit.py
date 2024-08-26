@@ -515,10 +515,10 @@ def test__format_check_on_message():
         # Define the side effect to return different values for each call
         mock_get_completion.side_effect = [
             ["mocked_value_1", "mocked_ref_1"],
-            ["mocked_value_2;;;", "mocked_ref_2"],
-            [";;;mocked_value_3", "mocked_ref_3"],
+            ["mocked_value_2|||", "mocked_ref_2"],
+            ["|||mocked_value_3", "mocked_ref_3"],
             ["mocked_value_4", "mocked_ref_4"],
-            [";mocked;value;5", "mocked_ref_5"],
+            ["|mocked|value|5", "mocked_ref_5"],
         ]
 
         # Create an instance of NirmatAI
@@ -530,5 +530,5 @@ def test__format_check_on_message():
 
         assert (
             message
-            == "; LLM did not converge to right format, with attempts:\n\n1. mocked_value_1\n2. mocked_value_2___\n3. ___mocked_value_3\n4. mocked_value_4\n5. _mocked_value_5"  # noqa: E501
+            == "| LLM did not converge to right format, with attempts:\n\n1. mocked_value_1\n2. mocked_value_2___\n3. ___mocked_value_3\n4. mocked_value_4\n5. _mocked_value_5"  # noqa: E501
         )

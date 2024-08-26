@@ -17,11 +17,11 @@ The output shall contain:
     b. minor non-conformity: if the answer is partially provided in the context.
     c. full-compliance: if the answer is provided in the context.
 2. One paragraph rationale describing the compliance status.
-Separate each with a ; .
+Separate each with a | .
 Here you have a series of examples of output:
-    - minor non-conformity; The written documentation does not explicitly state the certification body's processes for granting, refusing, maintaining, renewing, suspending, restoring or withdrawing certification or expanding or reducing the scope of certification.;
-    - full-compliance; The requirement states that the certification body should retain authority for its decisions relating to certification. This is explicitly stated in the management system documents under "Certification Process" section, subsection 3.2.1, which clearly outlines the responsibility of the certification body and their decision-making process regarding certification.;
-    - full-compliance; The certification body has demonstrated initial and ongoing evaluation of its finances and sources of income through written documentation. This ensures that commercial, financial or other pressures do not compromise the impartiality of the organization.;
+    - minor non-conformity| The written documentation does not explicitly state the certification body's processes for granting, refusing, maintaining, renewing, suspending, restoring or withdrawing certification or expanding or reducing the scope of certification.|
+    - full-compliance| The requirement states that the certification body should retain authority for its decisions relating to certification. This is explicitly stated in the management system documents under "Certification Process" section, subsection 3.2.1, which clearly outlines the responsibility of the certification body and their decision-making process regarding certification.|
+    - full-compliance| The certification body has demonstrated initial and ongoing evaluation of its finances and sources of income through written documentation. This ensures that commercial, financial or other pressures do not compromise the impartiality of the organization.|
 """  # noqa: E501
 
 
@@ -324,7 +324,7 @@ class NirmatAI:
                 formatted_sources.append(formatted_source)
 
         # Join all formatted sources into a single string, separated by a semicolon
-        return "; ".join(formatted_sources)
+        return "| ".join(formatted_sources)
 
     def __get_completion_formatted(
         self, req_item: str, moc_item: str, attempts: int = 5
@@ -347,14 +347,14 @@ class NirmatAI:
         :return: A tuple containing the completion message and list of source chunks
         :rtype: tuple[str, list[Chunk]]
         """
-        out = "; LLM did not converge to right format, with attempts:\n"
+        out = "| LLM did not converge to right format, with attempts:\n"
         for i in range(attempts):
             message, sources = self.__get_completion(req_item, moc_item)
-            if message.count(";") in [1, 2]:
+            if message.count("|") in [1, 2]:
                 out = message
                 break
             else:
-                out += f"\n{i+1}. {message.replace(";", "_")}"
+                out += f"\n{i+1}. {message.replace("|", "_")}"
         return out, sources
 
     def process_requirements(self) -> pd.DataFrame:
@@ -395,7 +395,7 @@ class NirmatAI:
 
             if self.verbose >= 2:
                 print("Result: ", message)
-            split_result = message.split(";")
+            split_result = message.split("|")
 
             # Extract from split_result[0] the compliance status that can be:
             # major non-conformity, minor non-conformity, full-compliance
