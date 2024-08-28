@@ -39,6 +39,14 @@
         build:
           file: ./Dockerfile.dev
 
+    # Ensure pod name and container state are defined
+    - name: Ensure pod name and container state are set
+      ansible.builtin.assert:
+        that:
+          - pod_name is defined
+          - container_state is defined
+        fail_msg: "pod_name or container_state is not defined."
+
     # Create a pod if not starting the dev container only
     - name: Create pod
       containers.podman.podman_pod:
