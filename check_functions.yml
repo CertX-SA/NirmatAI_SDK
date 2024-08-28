@@ -63,7 +63,7 @@
       when: not start_dev_only | bool
 
     # Create a development container without GPU
-    - name: Create dev container
+    - name: Create dev container without GPU
       containers.podman.podman_container:
         name: "{{ pod_name }}_dev"
         image: nirmatai_sdk_dev:latest
