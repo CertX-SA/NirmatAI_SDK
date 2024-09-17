@@ -1,11 +1,6 @@
 name: Forgejo tests  # The name of the GitHub Actions workflow
 
-on:
-  push:
-    branches:
-      - main  # Trigger workflow on pushes to the main branch
-  pull_request: {}  # Trigger forgejo workflow on pull requests
-
+on: [push]
 jobs:
   test:
     runs-on: docker
