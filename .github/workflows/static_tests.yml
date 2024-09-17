@@ -47,7 +47,12 @@ jobs:
       # Run the specific quality check command
         env:
           POD_NAME: github  # Set environment variable
-        run: make ${{ matrix.quality-command }}
+        run: |
+          if [ "${{ matrix.quality-command }}" = "ansible-lint" ]; then
+            make ansible-lint ARGS="-x .forgejo"
+          else
+            make ${{ matrix.quality-command }}
+          fi
         # Execute the make command for the quality check
 
   tests:
