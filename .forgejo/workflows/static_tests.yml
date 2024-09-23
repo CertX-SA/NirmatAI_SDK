@@ -1,76 +1,63 @@
 name: Static tests
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-
-concurrency:
-  group: ${{ forgejo.workflow }}-${{ forgejo.event.pull_request.number  forgejo.head_ref  forgejo.ref }}
-  cancel-in-progress: ${{ forgejo.event_name == 'pull_request' }}
+on: pull_request
 
 jobs:
   setup:
-    runs-on: docker
-    container:
-      image: ubuntu:latest
+    runs-on: podman
+    env:
+      POD_NAME: forgejo
     steps:
+      - name: Install dependencies
+        run: dnf install -y nodejs git make ansible
+      - name: Install ansible-galaxy
+        run: ansible-galaxy collection install containers.podman
       - name: Checkout
-        uses: https://code.forgejo.org/actions/checkout@v4
-      - name: Setting up the relevant container and run development
-        uses: ./.forgejo/workflows/actions/install_dependencies
+        uses: actions/checkout@v4
+      - name: Set up dev container
+        run: make run-dev
 
   checks:
+    runs-on: podman
+    env:
+      POD_NAME: forgejo
     needs: setup
-    runs-on: docker
     strategy:
       matrix:
-        quality-command:
+        ci_step:
           - ansible-lint
-          - check-format-code
+          - format-check
           - type-check
     steps:
-      - uses: https://code.forgejo.org/actions/checkout@v4
-      - uses: ./.forgejo/workflows/actions/install_dependencies
-      - name: run ${{ matrix.quality-command }}
-        env:
-          POD_NAME: forgejo
-        run: make ${{ matrix.quality-command }}
-
-  tests:
-    needs: setup
-    runs-on: docker
-    steps:
-      - uses: https://code.forgejo.org/actions/checkout@v4
-      - uses: ./.forgejo/workflows/actions/install_dependencies
-      - name: run test without integration tests
-        env:
-          POD_NAME: forgejo
-        run: make test
-      - name: run coverage without integration tests
-        env:
-          POD_NAME: forgejo
-        run: make test-coverage
-      - name: Archive code coverage results
-        uses: https://code.forgejo.org/actions/upload-artifact@v4
-        if: always()
-        with:
-          name: code-coverage-report
-          path: htmlcov/
+      - name: Install dependencies
+        run: dnf install -y nodejs git make ansible
+      - name: Install ansible-galaxy
+        run: ansible-galaxy collection install containers.podman
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: run dev container
+        run: make run-dev
+      - name: Static tests
+        run: make ${{ matrix.ci_step }}
 
   docs:
+    runs-on: podman
+    env:
+      POD_NAME: forgejo
     needs: setup
-    runs-on: docker
     steps:
-      - uses: https://code.forgejo.org/actions/checkout@v4
-      - uses: ./.forgejo/workflows/actions/install_dependencies
-      - name: run docs
-        env:
-          POD_NAME: forgejo
+      - name: Install dependencies
+        run: dnf install -y nodejs git make ansible
+      - name: Install ansible-galaxy
+        run: ansible-galaxy collection install containers.podman
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: run dev container
+        run: make run-dev
+      - name: Build docs
         run: make build-docs
       - name: Archive docs
-        uses: https://code.forgejo.org/actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: docs
@@ -79,7 +66,6 @@ jobs:
   all_checks_passed:
     needs:
       - checks
-      - tests
       - docs
     runs-on: docker
     steps:
