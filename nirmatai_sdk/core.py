@@ -371,11 +371,13 @@ class NirmatAI:
         """
         print("Processing requirements...")
         if self.verbose >= 2:
+            prınt("Prompts are as follows:")
             print("System Prompt: ", self.system_prompt)
             print("Prompt: ", self.prompt)
 
         comp_status, rationale, ref_to_doc = [], [], []
 
+        print(f"Number of requirements to be processed: {len(self.reqs)}")
         # Iterate through each row in the requirements DataFrame
         for index, row in self.reqs.iterrows():
             if self.verbose >= 1:
