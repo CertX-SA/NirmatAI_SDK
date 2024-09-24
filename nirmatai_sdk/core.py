@@ -371,7 +371,7 @@ class NirmatAI:
         """
         print("Processing requirements...")
         if self.verbose >= 2:
-            prınt("Prompts are as follows:")
+            print("Prompts are as follows:")
             print("System Prompt: ", self.system_prompt)
             print("Prompt: ", self.prompt)
 
