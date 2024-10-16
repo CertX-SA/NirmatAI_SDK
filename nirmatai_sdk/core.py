@@ -443,15 +443,13 @@ class NirmatAI:
 
         # Define possible compliance statuses and their variations for robustness
         status_map = {
-            "major non-conformity": [
-                "major non-conformity", "major", "major non conformity",
-                "noncompliance", "non-compliance", "significant issue",
-                "critical non-conformance", "high-risk non-conformity",
-                "serious non-conformity","critical failure",
-                "substantial non-compliance", "major issue",
-                "severe non-compliance", "serious breach",
-                "critical non-adherence", "large non-conformity",
-                "severe breach", "major infraction"
+            "full-compliance": [
+                "full-compliance", "full compliance", "compliant", "full-conformity",
+                "compliance", "fully compliant", "meets requirements",
+                "adhered to", "satisfied all conditions", "in full compliance",
+                "no issues", "complete adherence", "perfect compliance",
+                "fully aligned", "met all criteria", "in line with standards",
+                "fully followed", "complete conformity", "total compliance"
             ],
             "minor non-conformity": [
                 "minor non-conformity", "minor breach", "minor non conformity",
@@ -461,19 +459,21 @@ class NirmatAI:
                 "low severity non-conformity", "negligible non-compliance",
                 "trivial non-conformity", "minor deviation"
             ],
-            "full-compliance": [
-                "full-compliance", "full compliance", "compliant",
-                "compliance", "fully compliant", "meets requirements",
-                "adhered to", "satisfied all conditions", "in full compliance",
-                "no issues", "complete adherence", "perfect compliance",
-                "fully aligned", "met all criteria", "in line with standards",
-                "fully followed", "complete conformity", "total compliance"
+            "major non-conformity": [
+                "major non-conformity", "major", "major non conformity",
+                "noncompliance", "non-compliance", "significant issue",
+                "critical non-conformance", "high-risk non-conformity",
+                "serious non-conformity","critical failure",
+                "substantial non-compliance", "major issue",
+                "severe non-compliance", "serious breach",
+                "critical non-adherence", "large non-conformity",
+                "severe breach", "major infraction"
             ]
         }
 
         # Check for each possible status or keyword in the compliance string
         for key, synonyms in status_map.items():
-            if all(synonym in compliance_status for synonym in synonyms):
+            if any(synonym in compliance_status for synonym in synonyms):
                 return key
 
         # Default to "major non-conformity" if no specific status is found
