@@ -425,8 +425,8 @@ class NirmatAI:
     def __extract_comp_status(self, compliance: str) -> str:
         """Extract the compliance status from the result.
 
-        This method processes the given compliance and checks for specific keywords
-        that indicates the compliance status.
+        This method processes the given compliance string and checks for specific keywords
+        that indicate the compliance status.
         If the status is not explicitly found, it defaults to "major non-conformity".
 
         :param compliance: The input compliance.
@@ -434,19 +434,43 @@ class NirmatAI:
         :return: The extracted compliance status.
         :rtype: str
         """
-        # Lower the comp_status
-        compliance_status = compliance.lower()
+        # Ensure the input is a valid string
+        if not isinstance(compliance, str):
+            raise ValueError("Compliance input must be a string.")
 
-        # Define the possible compliance statuses
-        statuses = ["major non-conformity", "minor non-conformity", "full-compliance"]
+        # Lowercase and strip extra whitespace from the input for uniform processing
+        compliance_status = compliance.strip().lower()
 
-        # Check for each status in the compliance status string
-        for status in statuses:
-            if status in compliance_status:
-                return status
+        # Define possible compliance statuses and their variations for robustness
+        status_map = {
+            "major non-conformity": ["major non-conformity", "major", "major non conformity", 
+                "noncompliance", "significant issue", "critical non-conformance", 
+                "high-risk non-conformity", "serious non-conformity", "critical failure", 
+                "substantial non-compliance", "major issue", "severe non-compliance", 
+                "serious breach", "critical non-adherence","large non-conformity",
+                "severe breach", "major infraction"
+            ],
+            "minor non-conformity": ["minor non-conformity", "minor", "minor non conformity", 
+                "low-risk non-compliance", "small issue", "minor issue", "minor non-compliance", 
+                "small non-conformance", "slight non-compliance", "minor breach", 
+                "low severity non-conformity", "negligible non-compliance", "small non-adherence",
+                "trivial non-conformity", "minor deviation"
+            ],
+            "full-compliance": ["full-compliance", "full compliance", "compliant", "compliance", 
+                "fully compliant", "meets requirements", "adhered to", "satisfied all conditions", 
+                "in full compliance", "no issues", "complete adherence", "perfect compliance", 
+                "fully aligned", "met all criteria", "in line with standards", "fully followed", 
+                "complete conformity", "total compliance", "adheres fully"
+            ]
+        }
+
+        # Check for each possible status or keyword in the compliance string
+        for key, synonyms in status_map.items():
+            if all(synonym in compliance_status for synonym in synonyms):
+                return key
 
         # Default to "major non-conformity" if no specific status is found
-        return ""
+        return compliance_status
 
     def save_results(
         self, dataframe: pd.DataFrame, output_path: str, attach_reqs: bool = False

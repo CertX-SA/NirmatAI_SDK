@@ -1,8 +1,0 @@
-name: Forgejo tests  # The name of the GitHub Actions workflow
-
-on: [push]
-jobs:
-  test:
-    runs-on: docker
-    steps:
-      - run: echo All Good
