@@ -425,9 +425,9 @@ class NirmatAI:
     def __extract_comp_status(self, compliance: str) -> str:
         """Extract the compliance status from the result.
 
-        This method processes the given compliance string and checks for specific keywords
-        that indicate the compliance status.
-        If the status is not explicitly found, it defaults to "major non-conformity".
+        This method processes the given compliance string and checks for
+        specific keywords that indicate the compliance status.
+        If the status is not explicitly found, it defaults to itself.
 
         :param compliance: The input compliance.
         :type compliance: str
@@ -443,24 +443,31 @@ class NirmatAI:
 
         # Define possible compliance statuses and their variations for robustness
         status_map = {
-            "major non-conformity": ["major non-conformity", "major", "major non conformity", 
-                "noncompliance", "significant issue", "critical non-conformance", 
-                "high-risk non-conformity", "serious non-conformity", "critical failure", 
-                "substantial non-compliance", "major issue", "severe non-compliance", 
-                "serious breach", "critical non-adherence","large non-conformity",
+            "major non-conformity": [
+                "major non-conformity", "major", "major non conformity",
+                "noncompliance", "non-compliance", "significant issue",
+                "critical non-conformance", "high-risk non-conformity",
+                "serious non-conformity","critical failure",
+                "substantial non-compliance", "major issue",
+                "severe non-compliance", "serious breach",
+                "critical non-adherence", "large non-conformity",
                 "severe breach", "major infraction"
             ],
-            "minor non-conformity": ["minor non-conformity", "minor", "minor non conformity", 
-                "low-risk non-compliance", "small issue", "minor issue", "minor non-compliance", 
-                "small non-conformance", "slight non-compliance", "minor breach", 
-                "low severity non-conformity", "negligible non-compliance", "small non-adherence",
+            "minor non-conformity": [
+                "minor non-conformity", "minor breach", "minor non conformity",
+                "low-risk non-compliance", "small issue", "minor issue",
+                "minor non-compliance", "small non-conformance",
+                "slight non-compliance", "minor", "small non-adherence",
+                "low severity non-conformity", "negligible non-compliance",
                 "trivial non-conformity", "minor deviation"
             ],
-            "full-compliance": ["full-compliance", "full compliance", "compliant", "compliance", 
-                "fully compliant", "meets requirements", "adhered to", "satisfied all conditions", 
-                "in full compliance", "no issues", "complete adherence", "perfect compliance", 
-                "fully aligned", "met all criteria", "in line with standards", "fully followed", 
-                "complete conformity", "total compliance", "adheres fully"
+            "full-compliance": [
+                "full-compliance", "full compliance", "compliant",
+                "compliance", "fully compliant", "meets requirements",
+                "adhered to", "satisfied all conditions", "in full compliance",
+                "no issues", "complete adherence", "perfect compliance",
+                "fully aligned", "met all criteria", "in line with standards",
+                "fully followed", "complete conformity", "total compliance"
             ]
         }
 
