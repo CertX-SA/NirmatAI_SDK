@@ -1,7 +1,9 @@
 """Core module for NirmataAI."""
 
 import os
+import time
 from pathlib import Path
+from time import strftime
 
 import numpy as np
 import pandas as pd
@@ -85,6 +87,10 @@ class NirmatAI:
 
         # Initialize an empty dictionary to store ingested files
         self.files: dict[str, list[IngestedDoc]] = {}
+
+        # Initialize the stop and pause signal
+        self.stop_signal = False
+        self.pause_signal = False
 
     def health_check(self) -> HealthResponse:
         """Check the health of the NirmataAI instance.
@@ -356,71 +362,170 @@ class NirmatAI:
             else:
                 out += f"\n{i+1}. {message.replace("|", "_")}"
         return out, sources
-
+    
     def process_requirements(self) -> pd.DataFrame:
         """Process the requirements and get the results.
 
-        The method processes the requirements passing them to the RAG then extracts the
+        The method processes the requirements, passing them to the RAG, then extracts the
         response and formats it into a DataFrame. The DataFrame contains the compliance
         status, the rationale, and the reference to the document.
 
         :return: The DataFrame containing the compliance status, the rationale, and the
             reference to the document.
         :rtype: pd.DataFrame
-
         """
-        print("Processing requirements...")
-        if self.verbose >= 2:
-            print("Prompts are as follows:")
-            print("System Prompt: ", self.system_prompt)
-            print("Prompt: ", self.prompt)
-
-        comp_status, rationale, ref_to_doc = [], [], []
-
-        print(f"Number of requirements to be processed: {len(self.reqs)}")
-        # Iterate through each row in the requirements DataFrame
-        for index, row in self.reqs.iterrows():
-            if self.verbose >= 1:
-                print(f"Processing row {index}")
-            if self.verbose >= 2:
-                print(f"Requirement: {row['Requirement']}")
-                print(f"Potential MoC: {row['Potential Means of Compliance']}")
-
-            req_item = row["Requirement"]
-            moc_item = row["Potential Means of Compliance"]
-
-            # If moc_item is NaN, replace it with a string asking for documentation
-            if pd.isna(moc_item):
-                moc_item = "Written documentation shall be provided to comply."
-
-            message, sources = self.__get_completion_formatted(req_item, moc_item)
+        try:
+            print("Processing requirements...")
 
             if self.verbose >= 2:
-                print("Result: ", message)
-            split_result = message.split("|")
+                print("Prompts are as follows:")
+                print(f"System Prompt: {self.system_prompt}")
+                print(f"Prompt: {self.prompt}")
 
-            # Extract from split_result[0] the compliance status that can be:
-            # major non-conformity, minor non-conformity, full-compliance
-            split_result[0] = self.__extract_comp_status(split_result[0])
+            # Initialize lists to store results
+            comp_status, rationale, ref_to_doc = [], [], []
 
-            comp_status.append(split_result[0])
-            rationale.append(split_result[1])
+            # Check if DataFrame is empty
+            if self.reqs.empty:
+                print("No requirements to process. The DataFrame is empty.")
+                return pd.DataFrame(
+                    columns=["Compliance status", "Rationale", "Ref. to Doc"]
+                )
 
-            # Extract the source used in the context
-            ref_to_doc.append(self.__format_sources(sources))
+            # Ensure required columns exist in the DataFrame
+            required_columns = [
+                "Requirement",
+                "Potential Means of Compliance"
+            ]
+            if not all(
+                col in self.reqs.columns for col in required_columns
+            ):
+                raise ValueError(
+                    f"DataFrame must contain the following columns: {required_columns}"
+                )
 
-        llm_raw_output = pd.DataFrame(
-            {
-                "Compliance status": comp_status,
-                "Rationale": rationale,
-                "Ref. to Doc": ref_to_doc,
-            }
-        )
+            print(f"Number of requirements to be processed: {len(self.reqs)}")
 
-        # Store Compliance status in y_pred for further scoring
-        self.y_pred = llm_raw_output["Compliance status"].to_numpy()
+            # Iterate through each row in the requirements DataFrame
+            for index, row in self.reqs.iterrows():
+                # Stop if stop_signal is set
+                if self.stop_signal:
+                    print("Process stopped by the user.")
+                    self.stop_signal = False
+                    break
 
-        return llm_raw_output
+                # Pause the process if pause_signal is set
+                while self.pause_signal:
+                    print("Process paused by the user. Waiting to resume...")
+                    time.sleep(15)
+
+                # Error handling for missing or NaN values in the Requirement column
+                if pd.isna(row["Requirement"]) or row["Requirement"] == "":
+                    print(
+                        f"Skipping row {index} due to missing 'Requirement' value."
+                    )
+                    comp_status.append("Error")
+                    rationale.append(
+                        f"Skipping row {index} due to missing 'Requirement' value."
+                    )
+                    ref_to_doc.append("N/A")
+                    continue
+
+                # Handle verbose logging
+                if self.verbose >= 1:
+                    print(f"Processing row {index}")
+                if self.verbose >= 2:
+                    print(f"Requirement: {row['Requirement']}")
+                    print(f"Potential MoC: {row['Potential Means of Compliance']}")
+
+                req_item = row["Requirement"]
+                moc_item = row["Potential Means of Compliance"]
+
+                # If moc_item is NaN, replace it with a string asking for documentation
+                if pd.isna(moc_item) or moc_item == "":
+                    moc_item = "Written documentation shall be provided to comply."
+
+                try:
+                    # Call internal function to get formatted message and sources
+                    message, sources = self.__get_completion_formatted(
+                        req_item,
+                        moc_item
+                    )
+                except Exception as e:
+                    print(f"Error processing row {index}: {e}")
+                    comp_status.append("Error")
+                    rationale.append(f"Error processing row {index}: {e}")
+                    ref_to_doc.append("N/A")
+                    continue
+
+                # Split the message and handle potential issues with formatting
+                try:
+                    split_result = message.split("|")
+                    if len(split_result) < 2:
+                        raise ValueError("Invalid response format!")
+                except Exception as e:
+                    print(f"Error in formatting for row {index}: {e}")
+                    comp_status.append("Error")
+                    rationale.append(f"Error in formatting for row {index}: {e}")
+                    ref_to_doc.append("N/A")
+                    continue
+                
+                # Extract compliance status and rationale
+                try:
+                    split_result[0] = self.__extract_comp_status(split_result[0])
+                except Exception as e:
+                    print(f"Error extracting compliance status for row {index}: {e}")
+                    comp_status.append("Error")
+                    rationale.append(
+                        f"Error extracting compliance status for row {index}: {e}"
+                    )
+                    ref_to_doc.append("N/A")
+                    continue
+
+                comp_status.append(split_result[0])
+                rationale.append(split_result[1])
+
+                # Format the source information
+                try:
+                    ref_to_doc.append(self.__format_sources(sources))
+                except Exception as e:
+                    print(f"Error formatting sources for row {index}: {e}")
+                    ref_to_doc.append("N/A")
+
+            # Create DataFrame with results
+            llm_raw_output = pd.DataFrame(
+                {
+                    "Compliance status": comp_status,
+                    "Rationale": rationale,
+                    "Ref. to Doc": ref_to_doc,
+                }
+            )
+
+            # Store Compliance status in y_pred for further scoring
+            self.y_pred = llm_raw_output["Compliance status"].to_numpy()
+
+            return llm_raw_output
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return pd.DataFrame(
+                columns=["Compliance status", "Rationale", "Ref. to Doc"]
+            )
+
+    def stop_processing(self) -> None:
+        """Stop the process_requirements method by setting the stop signal."""
+        print(f"Time: {strftime('%c')}. Stopping process...")
+        self.stop_signal = True
+
+    def pause_processing(self) -> None:
+        """Pause the process_requirements method."""
+        print(f"Time: {strftime('%c')}. Pausing process...")
+        self.pause_signal = True
+
+    def resume_processing(self) -> None:
+        """Resume the process_requirements method."""
+        print(f"Time: {strftime('%c')}. Resuming process...")
+        self.pause_signal = False
 
     def __extract_comp_status(self, compliance: str) -> str:
         """Extract the compliance status from the result.
