@@ -362,11 +362,11 @@ class NirmatAI:
             else:
                 out += f"\n{i+1}. {message.replace("|", "_")}"
         return out, sources
-    
+
     def process_requirements(self) -> pd.DataFrame:
         """Process the requirements and get the results.
 
-        The method processes the requirements, passing them to the RAG, then extracts the
+        The method processes the requirements, passing them to RAG, then extracts the
         response and formats it into a DataFrame. The DataFrame contains the compliance
         status, the rationale, and the reference to the document.
 
@@ -469,7 +469,7 @@ class NirmatAI:
                     rationale.append(f"Error in formatting for row {index}: {e}")
                     ref_to_doc.append("N/A")
                     continue
-                
+
                 # Extract compliance status and rationale
                 try:
                     split_result[0] = self.__extract_comp_status(split_result[0])
