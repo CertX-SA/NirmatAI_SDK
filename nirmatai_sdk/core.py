@@ -116,9 +116,8 @@ class NirmatAI:
 
         This method retrieves all non-hidden or DVC files from the specified directory.
         If the input is a file, it returns the file path.
-        The method handles both string and Path inputs
-        for the directory and raises exceptions
-        if the directory is empty or does not exist.
+        Handles both string and Path inputs and raises exceptions if directory is empty,
+        does not exist, or is inaccessible.
 
         :param directory: The directory to search for files.
         :type directory: str or Path
@@ -128,28 +127,51 @@ class NirmatAI:
         # Convert Path object to string if necessary
         if isinstance(directory, Path):
             directory = str(directory)
-            # Check if the path is a file, and return if it is true
+
+        # Check if the path exists and is accessible
+        if not os.path.exists(directory):
+            raise FileNotFoundError(f"Directory does not exist: {directory}")
+
+        # Check if path is a file
         if os.path.isfile(directory):
+            # Ensure it's a readable file
+            if not os.access(directory, os.R_OK):
+                raise PermissionError(f"File is not readable: {directory}")
             return [directory]
 
         # Ensure the directory path ends with a slash
         if not directory.endswith("/"):
             directory += "/"
 
-        # Check if the directory exists
-        if not os.path.exists(directory):
-            raise FileNotFoundError(f"Directory not found: {directory}")
+        # Ensure the directory path is accessible and is a directory
+        if not os.path.isdir(directory):
+            raise NotADirectoryError(f"Provided path is not a directory: {directory}")
 
-        # Check if the directory is empty
-        if not os.listdir(directory):
-            raise FileNotFoundError(f"Directory is empty: {directory}")
+        # Check for read permissions on the directory
+        if not os.access(directory, os.R_OK):
+            raise PermissionError(f"Directory is not accessible: {directory}")
 
-        # Get all files in the directory that are not hidden or DVC files
+        # Collect all files in the directory that are not hidden or DVC files
         files = [
             os.path.join(directory, file)
             for file in os.listdir(directory)
-            if not (file.startswith(".") or file.endswith(".dvc"))
+            if not file.startswith(".") and not file.endswith(".dvc")
         ]
+
+        # Validate that the directory is not empty
+        if not files:
+            raise FileNotFoundError(
+                f"No eligible files found in directory: {directory}"
+            )
+
+        # Check readability of each file
+        unreadable_files = [
+            file for file in files if not os.access(file, os.R_OK)
+        ]
+        if unreadable_files:
+            raise PermissionError(
+                f"Some files are not readable: {', '.join(unreadable_files)}"
+            )
 
         # Optionally print files to be ingested
         if self.verbose >= 1:
@@ -159,52 +181,91 @@ class NirmatAI:
 
         return files
 
-    def ingest(self, directory: str) -> None:
+
+    def ingest(self, directory: str | Path) -> None:
         """Ingest files from a given directory.
 
-        The method finds the files in the directory through the `__get_files` method and
+        The method finds the files in the directory through the __get_files method and
         ingests them into the NirmataAI instance. Ingestion is done using PrivateGPT.
         For the full list of supported files, refer to documentation:
         https://docs.privategpt.dev/manual/document-management/ingestion
 
         :param directory: The directory containing the files to be ingested.
-        :type directory: str
+        :type directory: str or Path
         """
-        # Get all files in the directory
-        files_to_ingest = self.__get_files(directory)
+        try:
+            # Get all files in the directory, handling potential errors
+            files_to_ingest = self.__get_files(directory)
+        except Exception as e:
+            print(f"Failed to retrieve files from directory {directory}. Error: {e}")
+            raise
+
+        # Prepare files dictionary with placeholders for ingestion results
         self.files = {
             file: [IngestedDoc(object="", doc_id="", doc_metadata=None)]
             for file in files_to_ingest
         }
 
-        # Ingest files
         print("Starting ingestion...")
         for ingest_file_path in self.files:
             try:
-                # Open the file in binary read mode
+                # Verify the file is accessible and readable
+                if not os.path.isfile(
+                    ingest_file_path
+                ) or not os.access(
+                    ingest_file_path, os.R_OK
+                ):
+                    raise PermissionError(f"File is not accessible: {ingest_file_path}")
+
+                # Open and ingest the file with secure exception handling
                 with open(ingest_file_path, "rb") as f:
-                    # Ingest the file and update the ingested documents
-                    ingested_docs = self.client.ingestion.ingest_file(
-                        file=f, timeout=self.timeout
-                    ).data
+                    try:
+                        ingested_docs = self.client.ingestion.ingest_file(
+                            file=f, timeout=self.timeout
+                        ).data
+                    except Exception as e:
+                        print(
+                            f"Ingestion failed for {ingest_file_path} due to an error."
+                        )
+                        raise RuntimeError(f"Client ingestion error: {e}") from e
+
+                    # Store the ingested document data
                     self.files[ingest_file_path] = ingested_docs
 
-                    # Check if the document was successfully ingested
+                    # Validate ingestion: Ensure the document is now listed
+                    ingested_ids = [
+                        doc.doc_id for doc in self.client.ingestion.list_ingested().data
+                    ]
                     if not all(
-                        doc in self.client.ingestion.list_ingested().data
+                        doc.doc_id in ingested_ids
                         for doc in self.files[ingest_file_path]
                     ):
-                        # If the document is a pdf file, be more specific
+                        # Specific error message for PDF files if ingestion issues occur
                         if ingest_file_path.endswith(".pdf"):
-                            raise ValueError("PDF not ingested, perhaps scanned.")
-                        raise ValueError("Document not ingested")
+                            raise ValueError(
+                                "PDF ingestion failed; check if it is scanned or malformed." # noqa: E501
+                            )
+                        raise ValueError(
+                            f"Ingestion failed for file: {ingest_file_path}"
+                        )
+
+                # Log successful ingestion if verbosity is enabled
                 if getattr(self, "verbose", 0) >= 1:
-                    print(f"Ingested file: {ingest_file_path}")
-            except Exception as e:
+                    print(
+                        f"Ingested file successfully: {ingest_file_path}"
+                    )
+
+            except (
+                FileNotFoundError, PermissionError, ValueError, RuntimeError
+            ) as e:
+                # Log error information and continue to the next file if feasible
                 print(f"Error ingesting file: {ingest_file_path}")
                 print(f"Error message: {e}")
-                # Throw an error if the document was not ingested
-                raise
+                # Stop ingestion if the error is critical
+                raise RuntimeError(
+                    f"Critical ingestion error for {ingest_file_path}: {e}"
+                ) from e
+
         if getattr(self, "verbose", 0) >= 1:
             print("Ingestion process completed.")
 
@@ -212,7 +273,7 @@ class NirmatAI:
         """Load requirements from an Excel file.
 
         The method loads the requirements from an Excel file and stores them in a pandas
-        DataFrame. If the column Label exists, it is stored in the `y_true` attribute.
+        DataFrame. If the column Label exists, it is stored in the y_true attribute.
 
         :param reqs_file: The path to the Excel file containing the requirements.
         :type reqs_file: str
@@ -220,28 +281,67 @@ class NirmatAI:
         # If reqs_file is a Path object, convert it to a string
         if isinstance(reqs_file, Path):
             reqs_file = str(reqs_file)
+
         # Check if the file exists
         if not os.path.exists(reqs_file):
-            raise FileNotFoundError("Requirements file not found.")
+            raise FileNotFoundError(
+                "Requirements file not found."
+            )
+
         # Check if the file is a .xlsx file
         if not reqs_file.endswith(".xlsx"):
-            raise ValueError("Requirements file is not an Excel file.")
+            raise ValueError(
+                "Requirements file is not an Excel file."
+            )
 
-        # Load the requirements from the Excel file into a pandas DataFrame
-        self.reqs = pd.read_excel(reqs_file)
+        try:
+            # Load the requirements from the Excel file into a pandas DataFrame
+            self.reqs = pd.read_excel(reqs_file)
 
-        # Check if the colums Requirement and Potential Means of Compliance exist
-        required_columns = ["Requirement", "Potential Means of Compliance"]
-        for column in required_columns:
-            if column not in self.reqs.columns:
-                raise ValueError(f"{column} column not found.")
+            # Ensure the file is not empty
+            if self.reqs.empty:
+                raise pd.errors.EmptyDataError(
+                    f"The Excel file is empty: {reqs_file}"
+                )
 
-        # If the column Label exits, print that you are using it
-        if "Label" in self.reqs.columns:
-            print("Storing Label column into y_true.")
-            # Save it in y_true
-            self.y_true = self.reqs["Label"].to_numpy()
-        # I feel like else or a raise can make this function more robust
+            # Check if the required columns exist
+            required_columns = [
+                "Requirement",
+                "Potential Means of Compliance"
+            ]
+            for column in required_columns:
+                if column not in self.reqs.columns:
+                    raise ValueError(
+                        f"Missing required column: {column}"
+                    )
+            # Check for "Label" column and handle accordingly
+            if "Label" in self.reqs.columns:
+                if self.reqs["Label"].isnull().all():
+                    # Warn if Label column is present but contains no valid data
+                    print(
+                        "Warning: 'Label' column is present but contains no valid data."
+                    )
+                else:
+                    print("Storing 'Label' column into y_true.")
+                    # Save the Label column to y_true
+                    self.y_true = self.reqs["Label"].to_numpy()
+            else:
+                print(
+                    "'Label' column not found. Continuing without storing labels."
+                )
+
+        except pd.errors.EmptyDataError as e:
+            raise pd.errors.EmptyDataError(
+                f"Error reading Excel file: {e}"
+            ) from e
+        except ValueError as e:
+            raise ValueError(
+                f"Error with Excel file structure: {e}"
+            ) from e
+        except Exception as e:
+            raise RuntimeError(
+                f"An unexpected error occurred while loading the requirements: {e}"
+            ) from e
 
     def __get_completion(self, req_item: str, moc_item: str) -> tuple[str, list[Chunk]]:
         """Get the completion from the LLM.
@@ -309,28 +409,58 @@ class NirmatAI:
 
         # Iterate over each source in the provided list
         for source in sources:
-            # Extract the document metadata from the source
-            metadata = source.document.doc_metadata
+            try:
+                # Ensure that the source has a 'document' attribute with 'doc_metadata'
+                if not hasattr(
+                    source,
+                    "document"
+                ) or not hasattr(source.document, "doc_metadata"):
+                    raise AttributeError(
+                        f"Source {source} is missing required document metadata."
+                    )
+                # Extract the document metadata from the source
+                metadata = source.document.doc_metadata
 
-            # Proceed only if metadata is available
-            if metadata:
-                # Extract file name, page label, and chunk window from metadata
-                file_name = metadata.get("file_name", "Unknown file")
-                page_label = metadata.get("page_label", "Unknown page")
-                chunk_window = metadata.get("window", "Unknown chunk")
+                # Ensure metadata is a valid dictionary
+                if not isinstance(metadata, dict):
+                    raise ValueError(
+                        f"Invalid metadata for source: {source}"
+                    )
 
-                # Format the extracted metadata into a structured string
-                formatted_source = (
-                    f"doc: {file_name}\n"
-                    f"page: {page_label}\n"
-                    f"chunk: {chunk_window}\n\n"
+                # Proceed only if metadata is available
+                if metadata:
+                    # Extract file name, page label, and chunk window from metadata
+                    file_name = metadata.get("file_name", "Unknown file")
+                    page_label = metadata.get("page_label", "Unknown page")
+                    chunk_window = metadata.get("window", "Unknown chunk")
+
+                    # Format the extracted metadata into a structured string
+                    formatted_source = (
+                        f"doc: {file_name}\n"
+                        f"page: {page_label}\n"
+                        f"chunk: {chunk_window}\n\n"
+                    )
+
+                    # Add thr formatted string to the list of formatted sources
+                    formatted_sources.append(formatted_source)
+            except (AttributeError, ValueError, KeyError) as e:
+                # Source does not have the required attributes or metadata
+                print(
+                    f"Warning: Skipping source due to error: {e}"
                 )
-
-                # Add thr formatted string to the list of formatted sources
-                formatted_sources.append(formatted_source)
+                continue  # Skip this source and move to the next one
+            except Exception as e:
+                print(
+                    f"Unexpected error occurred while formatting the requirements: {e}"
+                )
+                continue
 
         # Join all formatted sources into a single string, separated by a semicolon
-        return "| ".join(formatted_sources)
+        if formatted_sources:
+            return "| ".join(formatted_sources)
+        else:
+            return "No valid sources were found."
+
 
     def __get_completion_formatted(
         self, req_item: str, moc_item: str, attempts: int = 5
@@ -576,16 +706,25 @@ class NirmatAI:
             ]
         }
 
-        # Check for each possible status or keyword in the compliance string
-        for key, synonyms in status_map.items():
-            if any(synonym in compliance_status for synonym in synonyms):
-                return key
+        # Attempt to match the compliance status using keywords in the status_map
+        for status, synonyms in status_map.items():
+            for synonym in synonyms:
+                if synonym in compliance_status:
+                    return status
+
+        # If no match is found, log a warning and return a default value
+        print(
+            f"Warning: Unrecognized compliance status '{compliance_status}', defaulting to 'major non-conformity'." # noqa: E501
+        )
 
         # Default to "major non-conformity" if no specific status is found
         return compliance_status
 
     def save_results(
-        self, dataframe: pd.DataFrame, output_path: str, attach_reqs: bool = False
+            self,
+            dataframe: pd.DataFrame,
+            output_path: str,
+            attach_reqs: bool = False
     ) -> None:
         """Save the results to file.
 
@@ -600,35 +739,68 @@ class NirmatAI:
             to False.
         :type attach_reqs: bool, optional
 
+        :raises FileNotFoundError: If the directory does not exist.
+        :raises AttributeError: If attach_reqs is True but not a valid DataFrame.
+        :raises ValueError: If the file extension is not supported.
+        :raises IOError: If there are issues writing the file.
         """
-        # Check if the directory of the output_path exists
-        output_dir = os.path.dirname(output_path)
-        if output_dir and not os.path.exists(output_dir):
-            raise FileNotFoundError(f"Output directory does not exist: {output_dir}.")
+        try:
+            # Check if output directory exists
+            output_dir = os.path.dirname(output_path)
+            if output_dir and not os.path.exists(output_dir):
+                raise FileNotFoundError(
+                    f"Output directory does not exist: {output_dir}"
+                )
 
-        # Attach requirements to the results if attach_reqs is True
-        if attach_reqs:
-            if hasattr(self, "reqs") and isinstance(self.reqs, pd.DataFrame):
-                dataframe = pd.concat([self.reqs, dataframe], axis=1)
+            # Check if the DataFrame is empty
+            if dataframe.empty:
+                print("Warning: The DataFrame is empty. An empty file will be saved.")
+
+            # Attach requirements if requested
+            if attach_reqs:
+                if hasattr(self, "reqs") and isinstance(self.reqs, pd.DataFrame):
+                    if not self.reqs.empty:
+                        dataframe = pd.concat([self.reqs, dataframe], axis=1)
+                    else:
+                        raise ValueError(
+                            "'reqs' DataFrame is empty, cannot attach requirements."
+                        )
+                else:
+                    raise AttributeError(
+                        "The 'reqs' attribute must be a valid DataFrame to attach."
+                    )
+
+            # Check file extension and save the file accordingly
+            file_extension = os.path.splitext(output_path)[1].lower()
+            if file_extension == ".csv":
+                # Save as CSV file
+                dataframe.to_csv(output_path, index=False)
+            elif file_extension == ".html":
+                # Replace newline characters with <br> for HTML rendering
+                dataframe = dataframe.replace("\n", "<br>", regex=True)
+                # Save as HTML file
+                dataframe.to_html(output_path, escape=False, index=False)
             else:
-                raise AttributeError("The 'reqs' attribute must be a dataframe!")
+                raise ValueError(
+                    f"Unsupported file extension: {file_extension}"
+                )
 
-        # Determine the file extension and save the file accordingly
-        file_extension = os.path.splitext(output_path)[1].lower()
-        if file_extension == ".csv":
-            # Save as csv file
-            dataframe.to_csv(output_path, index=False)
-        elif file_extension == ".html":
-            # Replace all \n with <br> for HTML rendering
-            dataframe = dataframe.replace("\n", "<br>", regex=True)
-            # Save as HTML file
-            dataframe.to_html(output_path, escape=False, index=False)
-        else:
-            raise ValueError(f"Unsupported file extension: {file_extension}")
+            # Confirm file save
+            if getattr(self, "verbose", 0) >= 1:
+                print(f"Results saved to {output_path}")
 
-        # If verbose level is set to 1 or higher, print a confirmation message
-        if getattr(self, "verbose", 0) >= 1:
-            print(f"Results saved to {output_path}")
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+        except PermissionError:
+            print(f"Error: Permission denied. Cannot write to {output_path}.")
+        except AttributeError as e:
+            print(f"Error: {e}")
+        except ValueError as e:
+            print(f"Error: {e}")
+        except OSError as e:
+            print(f"IOError: Failed to write the file due to {e}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
 
     def delete_all_documents(self) -> None:
         """Delete all ingested documents.
