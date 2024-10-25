@@ -7,8 +7,11 @@ from time import strftime
 
 import numpy as np
 import pandas as pd
+import pytesseract
+from pdf2image import convert_from_path
 from pgpt_python.client import PrivateGPTApi
 from pgpt_python.types import Chunk, HealthResponse, IngestedDoc
+from pypdf import PdfReader
 
 SYSTEM_PROMPT = """You are an expert Management System auditor.
 Given the attached management system documents and the following requirement provide the compliance status to be one of:
@@ -25,7 +28,6 @@ Here you have a series of examples of output:
     - full-compliance| The requirement states that the certification body should retain authority for its decisions relating to certification. This is explicitly stated in the management system documents under "Certification Process" section, subsection 3.2.1, which clearly outlines the responsibility of the certification body and their decision-making process regarding certification.|
     - full-compliance| The certification body has demonstrated initial and ongoing evaluation of its finances and sources of income through written documentation. This ensures that commercial, financial or other pressures do not compromise the impartiality of the organization.|
 """  # noqa: E501
-
 
 class NirmatAI:
     """NirmatAI class for user-facing functionalities.
@@ -181,6 +183,25 @@ class NirmatAI:
 
         return files
 
+    def __is_scanned_pdf(self, file_path: str) -> bool:
+        """Check if a PDF is a scanned document by performing OCR on the first page."""
+        images = convert_from_path(file_path, first_page=0, last_page=1)
+        for img in images:
+            text = pytesseract.image_to_string(img)
+            if text.strip():  # If OCR detects text, it's a scanned PDF
+                return True
+        return False
+
+    def __is_malformed_pdf(self, file_path: str) -> bool:
+        """Check if a PDF is malformed by attempting to read it."""
+        try:
+            reader = PdfReader(file_path)
+            number_of_pages = len(reader.pages)
+            if number_of_pages > 0:
+                return False
+        except Exception:
+            return True
+        return False
 
     def ingest(self, directory: str | Path) -> None:
         """Ingest files from a given directory.
@@ -242,9 +263,18 @@ class NirmatAI:
                     ):
                         # Specific error message for PDF files if ingestion issues occur
                         if ingest_file_path.endswith(".pdf"):
-                            raise ValueError(
-                                "PDF ingestion failed; check if it is scanned or malformed." # noqa: E501
-                            )
+                            if self.__is_malformed_pdf(ingest_file_path):
+                                raise ValueError(
+                                    "PDF ingestion failed; PDF is malformed or corrupted." # noqa: E501
+                                )
+                            elif self.__is_scanned_pdf(ingest_file_path):
+                                raise ValueError(
+                                    "PDF ingestion failed; PDF is a scanned document without searchable text." # noqa: E501
+                                )
+                            else:
+                                raise ValueError(
+                                    "PDF ingestion failed for an unknown reason."
+                                )
                         raise ValueError(
                             f"Ingestion failed for file: {ingest_file_path}"
                         )
@@ -718,7 +748,7 @@ class NirmatAI:
         )
 
         # Default to "major non-conformity" if no specific status is found
-        return compliance_status
+        return ""
 
     def save_results(
             self,
