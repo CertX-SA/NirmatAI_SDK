@@ -193,7 +193,7 @@ class NirmatAI:
             return True
         return False
     
-    def __is_scanned_pdf(file_path):
+    def __is_scanned_pdf(self, file_path: str) -> bool:
         try:
             # Open the PDF file
             with pdfplumber.open(file_path) as pdf:
