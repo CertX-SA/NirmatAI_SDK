@@ -298,7 +298,7 @@ class NirmatAI:
                             self.broken_files.append(
                                 (
                                     ingest_file_path,
-                                    "PDF ingestion failed for an unknown reason."
+                                    "File ingestion failed for an unknown reason."
                                 )
                             )
                         # Log successful ingestion if verbosity is enabled
