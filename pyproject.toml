@@ -27,7 +27,7 @@ dependencies = [
     "seaborn==0.13.2",
     "lxml==5.2.2",
     "scikit-learn==1.5.1",
-    "pytesseract==0.11.0",
+    "pdfplumber==0.11.0",
     "pypdf==5.0.1"
 ]
 
