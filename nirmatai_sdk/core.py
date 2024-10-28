@@ -246,7 +246,7 @@ class NirmatAI:
                 ) or not os.access(
                     ingest_file_path, os.R_OK
                 ):
-                    raise PermissionError(f"File is not accessible: {ingest_file_path}")
+                    raise PermissionError(f"File is not accessible: {os.path.basename(ingest_file_path)}") # noqa: E501
 
                 # Open and ingest the file with secure exception handling
                 with open(ingest_file_path, "rb") as f:
@@ -256,7 +256,7 @@ class NirmatAI:
                         ).data
                     except Exception as e:
                         print(
-                            f"Ingestion failed for {ingest_file_path} due to an error."
+                            f"Ingestion failed for {os.path.basename(ingest_file_path)} due to an error." # noqa: E501
                         )
                         raise RuntimeError(f"Client ingestion error: {e}") from e
 
@@ -304,25 +304,25 @@ class NirmatAI:
                         # Log successful ingestion if verbosity is enabled
                         if getattr(self, "verbose", 0) >= 1:
                             print(
-                                f"File ingestion failed: {ingest_file_path}"
+                                f"File ingestion failed: {os.path.basename(ingest_file_path)}" # noqa: E501
                             )
                         continue
 
                 # Log successful ingestion if verbosity is enabled
                 if getattr(self, "verbose", 0) >= 1:
                     print(
-                        f"Ingested file successfully: {ingest_file_path}"
+                        f"Ingested file successfully: {os.path.basename(ingest_file_path)}" # noqa: E501
                     )
 
             except (
                 FileNotFoundError, PermissionError, ValueError, RuntimeError
             ) as e:
                 # Log error information and continue to the next file if feasible
-                print(f"Error ingesting file: {ingest_file_path}")
+                print(f"Error ingesting file: {os.path.basename(ingest_file_path)}")
                 print(f"Error message: {e}")
                 # Stop ingestion if the error is critical
                 raise RuntimeError(
-                    f"Critical ingestion error for {ingest_file_path}: {e}"
+                    f"Critical ingestion error for {os.path.basename(ingest_file_path)}: {e}" # noqa: E501
                 ) from e
 
         for broken_file, _ in self.broken_files:
