@@ -7,8 +7,7 @@ from time import strftime
 
 import numpy as np
 import pandas as pd
-import pytesseract
-from pdf2image import convert_from_path
+import pdfplumber
 from pgpt_python.client import PrivateGPTApi
 from pgpt_python.types import Chunk, HealthResponse, IngestedDoc
 from pypdf import PdfReader
@@ -183,15 +182,6 @@ class NirmatAI:
 
         return files
 
-    def __is_scanned_pdf(self, file_path: str) -> bool:
-        """Check if a PDF is a scanned document by performing OCR on the first page."""
-        images = convert_from_path(file_path, first_page=0, last_page=1)
-        for img in images:
-            text = pytesseract.image_to_string(img)
-            if text.strip():  # If OCR detects text, it's a scanned PDF
-                return True
-        return False
-
     def __is_malformed_pdf(self, file_path: str) -> bool:
         """Check if a PDF is malformed by attempting to read it."""
         try:
@@ -202,6 +192,23 @@ class NirmatAI:
         except Exception:
             return True
         return False
+    
+    def __is_scanned_pdf(file_path):
+        try:
+            # Open the PDF file
+            with pdfplumber.open(file_path) as pdf:
+                # Iterate through each page in the PDF
+                for page in pdf.pages:
+                    # Try to extract text from the current page
+                    text = page.extract_text()
+                    # Check if any text is found on this page
+                    if text and text.strip():
+                        return False  # If text is found, it's not a scanned PDF
+            # If no text is found in any page, assume it's a scanned PDF
+            return True  
+        except Exception as e:
+            print(f"Error processing the PDF: {e}")
+            return False  # Return False in case of errors
 
     def ingest(self, directory: str | Path) -> None:
         """Ingest files from a given directory.
@@ -263,11 +270,11 @@ class NirmatAI:
                     ):
                         # Specific error message for PDF files if ingestion issues occur
                         if ingest_file_path.endswith(".pdf"):
-                            if self.__is_malformed_pdf(ingest_file_path):
+                            if self.__is_malformed_pdf(str(ingest_file_path)):
                                 raise ValueError(
                                     "PDF ingestion failed; PDF is malformed or corrupted." # noqa: E501
                                 )
-                            elif self.__is_scanned_pdf(ingest_file_path):
+                            elif self.__is_scanned_pdf(str(ingest_file_path)):
                                 raise ValueError(
                                     "PDF ingestion failed; PDF is a scanned document without searchable text." # noqa: E501
                                 )
