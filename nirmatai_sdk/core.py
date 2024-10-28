@@ -89,6 +89,9 @@ class NirmatAI:
         # Initialize an empty dictionary to store ingested files
         self.files: dict[str, list[IngestedDoc]] = {}
 
+        #Initialize an empty array to store broken and/or scanned files
+        self.broken_files: list[tuple[str, str]] = []
+
         # Initialize the stop and pause signal
         self.stop_signal = False
         self.pause_signal = False
@@ -271,20 +274,42 @@ class NirmatAI:
                         # Specific error message for PDF files if ingestion issues occur
                         if ingest_file_path.endswith(".pdf"):
                             if self.__is_malformed_pdf(str(ingest_file_path)):
-                                raise ValueError(
-                                    "PDF ingestion failed; PDF is malformed or corrupted." # noqa: E501
+                                self.broken_files.append(
+                                    (
+                                        ingest_file_path,
+                                        "PDF is malformed or corrupted."
+                                    )
                                 )
                             elif self.__is_scanned_pdf(str(ingest_file_path)):
-                                raise ValueError(
-                                    "PDF ingestion failed; PDF is a scanned document without searchable text." # noqa: E501
+                                self.broken_files.append(
+                                    (
+                                        ingest_file_path,
+                                        "PDF is a scanned document."
+                                    )
                                 )
                             else:
-                                raise ValueError(
+                                self.broken_files.append(
+                                    (
+                                        ingest_file_path,
+                                        "PDF ingestion failed for an unknown reason."
+                                    )
+                                )
+                        else:
+                            self.broken_files.append(
+                                (
+                                    ingest_file_path,
                                     "PDF ingestion failed for an unknown reason."
                                 )
-                        raise ValueError(
-                            f"Ingestion failed for file: {ingest_file_path}"
-                        )
+                            )
+                        
+                        # Remove the file from self.files since ingestion failed
+                        del self.files[ingest_file_path]
+                        # Log successful ingestion if verbosity is enabled
+                        if getattr(self, "verbose", 0) >= 1:
+                            print(
+                                f"File ingestion failed: {ingest_file_path}"
+                            )
+                        continue
 
                 # Log successful ingestion if verbosity is enabled
                 if getattr(self, "verbose", 0) >= 1:
@@ -305,6 +330,29 @@ class NirmatAI:
 
         if getattr(self, "verbose", 0) >= 1:
             print("Ingestion process completed.")
+    
+    def print_broken_files(self) -> None:
+        """Prints the broken files along with their corresponding error messages.
+
+        :param broken_files: A list of tuples, where each tuple contains a file path
+                            and an error message.
+        """
+        if not self.broken_files:
+            print("No broken files encountered.")
+        else:
+            print("The following files encountered issues during ingestion:")
+            for idx, (file_path, error_msg) in enumerate(self.broken_files, start=1):
+                print(f"{idx}. File: {file_path}")
+                print(f"   Error: {error_msg}\n")
+
+    def get_broken_files(self) -> list[tuple[str, str]]:
+        """Returns the list of broken files and their error messages.
+
+        :param broken_files: A list of tuples, where each tuple contains a file path (str)
+                            and an error message (str).
+        :return: The list of broken files with their associated error messages.
+        """
+        return self.broken_files
 
     def load_requirements(self, reqs_file: str | Path) -> None:
         """Load requirements from an Excel file.
