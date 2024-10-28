@@ -301,9 +301,6 @@ class NirmatAI:
                                     "PDF ingestion failed for an unknown reason."
                                 )
                             )
-
-                        # Remove the file from self.files since ingestion failed
-                        del self.files[ingest_file_path]
                         # Log successful ingestion if verbosity is enabled
                         if getattr(self, "verbose", 0) >= 1:
                             print(
@@ -328,8 +325,16 @@ class NirmatAI:
                     f"Critical ingestion error for {ingest_file_path}: {e}"
                 ) from e
 
+        for broken_file, _ in self.broken_files:
+            if broken_file in self.files:
+                del self.files[broken_file]
+        
         if getattr(self, "verbose", 0) >= 1:
             print("Ingestion process completed.")
+        if self.broken_files:
+            print(
+                f"Ingestion completed with errors. Broken files: {self.broken_files}"
+            )
 
     def print_broken_files(self) -> None:
         """Prints the broken files along with their corresponding error messages.
