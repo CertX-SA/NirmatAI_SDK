@@ -301,7 +301,7 @@ class NirmatAI:
                                     "PDF ingestion failed for an unknown reason."
                                 )
                             )
-                        
+
                         # Remove the file from self.files since ingestion failed
                         del self.files[ingest_file_path]
                         # Log successful ingestion if verbosity is enabled
@@ -330,7 +330,7 @@ class NirmatAI:
 
         if getattr(self, "verbose", 0) >= 1:
             print("Ingestion process completed.")
-    
+
     def print_broken_files(self) -> None:
         """Prints the broken files along with their corresponding error messages.
 
@@ -348,7 +348,7 @@ class NirmatAI:
     def get_broken_files(self) -> list[tuple[str, str]]:
         """Returns the list of broken files and their error messages.
 
-        :param broken_files: A list of tuples, where each tuple contains a file path (str)
+        :param broken_files: A list of tuples, where each tuple contains a filepath(str)
                             and an error message (str).
         :return: The list of broken files with their associated error messages.
         """
