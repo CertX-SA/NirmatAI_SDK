@@ -357,7 +357,13 @@ class NirmatAI:
                             and an error message (str).
         :return: The list of broken files with their associated error messages.
         """
-        return self.broken_files
+        # Extract only the file name from the file path using os.path.basename
+        return [
+            (
+                os.path.basename(file_path),
+                error_msg
+            ) for file_path, error_msg in self.broken_files
+        ]
 
     def load_requirements(self, reqs_file: str | Path) -> None:
         """Load requirements from an Excel file.
