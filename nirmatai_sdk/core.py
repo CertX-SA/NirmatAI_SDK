@@ -328,7 +328,7 @@ class NirmatAI:
         for broken_file, _ in self.broken_files:
             if broken_file in self.files:
                 del self.files[broken_file]
-        
+
         if getattr(self, "verbose", 0) >= 1:
             print("Ingestion process completed.")
         if self.broken_files:
