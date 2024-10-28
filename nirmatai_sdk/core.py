@@ -192,7 +192,7 @@ class NirmatAI:
         except Exception:
             return True
         return False
-    
+
     def __is_scanned_pdf(self, file_path: str) -> bool:
         try:
             # Open the PDF file
@@ -205,7 +205,7 @@ class NirmatAI:
                     if text and text.strip():
                         return False  # If text is found, it's not a scanned PDF
             # If no text is found in any page, assume it's a scanned PDF
-            return True  
+            return True
         except Exception as e:
             print(f"Error processing the PDF: {e}")
             return False  # Return False in case of errors
@@ -214,7 +214,7 @@ class NirmatAI:
         """Ingest files from a given directory.
 
         The method finds the files in the directory through the __get_files method and
-        ingests them into the NirmataAI instance. Ingestion is done using PrivateGPT.
+        ingests them into the NirmatAI instance. Ingestion is done using PrivateGPT.
         For the full list of supported files, refer to documentation:
         https://docs.privategpt.dev/manual/document-management/ingestion
 

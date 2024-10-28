@@ -251,7 +251,7 @@ def test_extract_comp_status_major_non_conformity():
         "major non-conformity",
         "",
         "major non-conformity",
-        "",
+        "major non-conformity",
     ]
 
 
@@ -320,9 +320,9 @@ def test_extract_comp_status_last_resort():
     # Check the result
     assert result == [
         "",
-        "",
-        "",
-        "",
+        "minor non-conformity",
+        "full-compliance",
+        "full-compliance",
     ]
 
 
